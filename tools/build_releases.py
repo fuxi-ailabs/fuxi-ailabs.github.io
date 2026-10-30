@@ -338,7 +338,6 @@ def render(products, evals, out_dir):
                 f"<div class=meta>{day} {kind}"
                 + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
                 + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
-                + (f" · 工具包 <a href=\"{html.escape(plus['url'])}\">hmigbot-plus {html.escape(plus['tag'])}</a>" if plus else "")
                 + "</div>")
         rows = [r for r in evals if r.get("tag") == tag or (not r.get("tag") and plus and r.get("plus_tag") == plus["tag"])]
         body = packages_block(e, plus) + evals_table(rows, out_dir)
