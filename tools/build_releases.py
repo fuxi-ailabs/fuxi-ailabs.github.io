@@ -319,32 +319,7 @@ def render(entries, repo, evals):
                 + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
                 + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
                 + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
-        chips = []
-        bc = e.get("business_comparisons")
-        if bc:
-            chips.append(chip(f"business comparisons {bc['pass']:,} pass / {bc['fail']} fail / {bc['skip']} skip", "bad" if bc["fail"] else "ok"))
-        for r in e.get("runs", []):
-            c = r.get("conclusion") or "unknown"
-            chips.append(f'<a class="chip {"ok" if c == "success" else "bad" if c == "failure" else "dim"}" href="{html.escape(r["url"])}">'
-                         f'{html.escape(r.get("name") or "run")} #{r["id"]} · {html.escape(c)}</a>')
-        for p in e.get("prs", []):
-            chips.append(f'<a class="chip dim" href="{html.escape(p["url"])}">{html.escape(p["repo"].split("/")[1])} PR #{p["number"]}</a>')
-        reports = []
-        for r in e.get("runs", []):
-            for a in r.get("verification_artifacts", []):
-                label = f"{PRODUCTS.get(a['product'], a['product'])} {PLATFORMS.get(a['platform'], a['platform'])} verification artifact"
-                reports.append(f'<li><a href="{html.escape(a["url"])}">{html.escape(label)}</a> <span class=dim>run #{r["id"]}, {a["bytes"] >> 20} MB'
-                               + (", expired" if a["expired"] else "") + "</span></li>")
-        for a in e.get("attached_reports", []):
-            reports.append(f'<li><a href="{html.escape(a["url"])}">{html.escape(a["name"])}</a> <span class=dim>release asset, {max(1, a["bytes"] >> 10)} KB</span></li>')
-        for a in e.get("extra_reports", []):
-            reports.append(f'<li><a href="{html.escape(a["url"])}">{html.escape(a["title"])}</a>' + (f' <span class=dim>{html.escape(a.get("note", ""))}</span>' if a.get("note") else "") + "</li>")
-        notes = f"<p class=notes>{html.escape(e['notes'])}</p>" if e.get("notes") else ""
         body = evals_table(evals.get(tag, []))
-        build = (f"<div class=chips>{''.join(chips)}</div>" if chips else "") + matrix_table(e.get("matrix"), repo) + notes
-        build += (f"<ul>{''.join(reports)}</ul>" if reports else "<p class=dim>No build report attached to this release.</p>")
-        n_runs = len(e.get("runs", []))
-        body += (f"<details><summary>构建验收 · {n_runs} acceptance run(s), {len(reports)} report file(s)</summary>{build}</details>")
         cards.append(f"<section class=card id=\"{html.escape(tag)}\">{head}{body}</section>")
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
@@ -372,7 +347,7 @@ footer{{margin-top:24px;color:var(--dim);font-size:12px}}
 <p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
-未测的格子显示"未评测"。发布流水线自己的构建验收(verification / smoke / 审计 / 升级)折叠在每张卡底部。指向私有仓的链接需要登录的组织成员。</p>
+未测的格子显示"未评测"。指向私有仓的链接需要登录的组织成员。</p>
 {''.join(cards)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>) · hand-added links in <a href="overrides.json">overrides.json</a></footer>
 </main></body></html>
@@ -384,7 +359,7 @@ def main():
     ap.add_argument("--repo", default="fuxi-ailabs/HMBot")
     ap.add_argument("--site", default=str(Path(__file__).resolve().parent.parent))
     ap.add_argument("--cache", default=os.environ.get("HMBOT_RELEASE_CACHE") or str(Path.home() / ".cache" / "hmbot-release-reports"))
-    ap.add_argument("--artifact-releases", type=int, default=1,
+    ap.add_argument("--artifact-releases", type=int, default=0,
                     help="download and parse verification artifacts for this many newest product releases (default 1; 0 = none)")
     ap.add_argument("--limit", type=int, default=100)
     args = ap.parse_args()
