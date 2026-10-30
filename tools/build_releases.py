@@ -160,17 +160,17 @@ RESULT_LABEL = {"pass": ("✓ 通过", "ok"), "partial": ("◐ 部分", "warn"),
 def checklist_block(r):
     cl = r.get("checklist") or []
     if not cl:
-        return ""
+        return "<span class=dim>未提供</span>"
     counts = {}
     for i in cl:
         counts[i.get("result", "untested")] = counts.get(i.get("result", "untested"), 0) + 1
     summary = " · ".join(f"{RESULT_LABEL[k][0]} {counts[k]}" for k in ("pass", "partial", "fail", "untestable", "untested") if counts.get(k))
-    src = f' <span class=dim>来源:{html.escape(r["checklist_source"])}</span>' if r.get("checklist_source") else ""
+    src = f'<div class=sub>来源:{html.escape(r["checklist_source"])}</div>' if r.get("checklist_source") else ""
     rows = "".join(f"<tr><td class=cid>{html.escape(str(i.get('id') or ''))}</td><td>{html.escape(i.get('feature') or '')}</td>"
                    f"<td class=\"res {RESULT_LABEL.get(i.get('result', 'untested'), RESULT_LABEL['untested'])[1]}\">{RESULT_LABEL.get(i.get('result', 'untested'), RESULT_LABEL['untested'])[0]}</td>"
                    f"<td class=note>{html.escape(i.get('note') or '')}</td></tr>" for i in cl)
-    return (f"<details class=cl><summary>功能清单 {len(cl)} 项 · {summary}{src}</summary>"
-            f"<table class=checklist><thead><tr><th>ID</th><th>功能</th><th>结果</th><th>说明</th></tr></thead><tbody>{rows}</tbody></table></details>")
+    return (f"<details class=cl><summary>{len(cl)} 项 · {summary}</summary>"
+            f"<table class=checklist><thead><tr><th>ID</th><th>功能</th><th>结果</th><th>说明</th></tr></thead><tbody>{rows}</tbody></table></details>{src}")
 
 
 def evals_table(rows):
@@ -188,12 +188,10 @@ def evals_table(rows):
                    f"<td>{pct(r.get('accuracy'))}</td><td>{pct(r.get('code_completeness'))}</td>"
                    f"<td title=\"active {fmt_dur(r.get('active_seconds'))}\">{fmt_dur(r.get('duration_seconds'))}</td>"
                    f"<td title=\"{html.escape(tok_tip)}\">{fmt_tok(r.get('tokens'))}</td>"
-                   f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td></tr>")
-        cb = checklist_block(r)
-        if cb:
-            out.append(f"<tr class=clrow><td colspan=8>{cb}</td></tr>")
+                   f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td>"
+                   f"<td class=clcell>{checklist_block(r)}</td></tr>")
     return ("<table class=evals><thead><tr><th>App</th><th>功能完备度</th><th>可用性</th><th>准确率</th><th>代码完备度</th>"
-            "<th>时间</th><th>token</th><th>证据</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
+            "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
 
 
 def render(entries, repo, evals):
@@ -231,8 +229,8 @@ tr.bad td:first-child{{color:var(--badfg)}} details{{margin-top:8px}} summary{{c
 .notes{{margin:8px 0 0;color:var(--dim)}}
 table.evals{{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:13px}} .evals th,.evals td{{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}}
 .evals th{{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}}
-tr.clrow td{{padding:0 8px 10px;border-bottom:1px solid var(--line)}} details.cl summary{{cursor:pointer;color:var(--dim);font-size:12px;padding:4px 0}}
-table.checklist{{border-collapse:collapse;width:100%;margin:4px 0 0;font-size:12.5px}} .checklist th,.checklist td{{text-align:left;padding:4px 8px;border-top:1px solid var(--line);vertical-align:top}}
+td.clcell{{min-width:220px}} details.cl summary{{cursor:pointer;white-space:nowrap}} details.cl[open] summary{{color:var(--dim);font-size:12px}}
+table.checklist{{border-collapse:collapse;width:100%;min-width:420px;margin:4px 0 0;font-size:12.5px}} .checklist th,.checklist td{{text-align:left;padding:4px 8px;border-top:1px solid var(--line);vertical-align:top}}
 .checklist th{{color:var(--dim);font-weight:600;font-size:11px}} td.cid{{white-space:nowrap;color:var(--dim)}} td.res{{white-space:nowrap}} td.res.ok{{color:var(--okfg)}} td.res.bad{{color:var(--badfg)}} td.res.warn{{color:var(--warnfg)}} td.res.dim{{color:var(--dim)}} td.note{{color:var(--dim)}} .evals td.app{{font-weight:600}} .sub{{font-weight:400;color:var(--dim);font-size:12px}} .na{{color:var(--dim)}} td.ev{{font-size:12px;max-width:260px}}
 footer{{margin-top:24px;color:var(--dim);font-size:12px}}
 </style></head><body><main>
