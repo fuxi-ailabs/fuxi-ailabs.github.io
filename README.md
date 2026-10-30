@@ -28,18 +28,18 @@ python3 tools/build_releases.py && git add releases && git commit -m "evals: v1.
 
 六个指标的口径:功能完备度 = 功能在鸿蒙上可达的比例(gt-eval 严格完备率 / bench 严格口径,测不了计失败);可用性 = 按普通用户正常使用可用的比例(卡死 / 崩溃绕不过去的算不可用);准确率 = 行为 / 业务对比与安卓一致的比例;代码完备度 = 源码单元有迁移对应物且无桩的比例;时间 = 迁移首末会话记录的墙钟;token = 全部 API 调用 input + cache read + cache write + output 之和。
 
-每个 App 一份功能清单:评测行下面可展开,逐条功能记 通过 / 部分 / 不通过 / 测不了 / 未评测。来源三选一:
+功能清单一列是人工上传的:一个链接,或一个表格文件。
 
 ```bash
-# 1) 只列清单(spec 阶段的 feature-index.md,全部记为未评测)
-python3 tools/add_eval.py --tag v1.8.0-rc.1 --app Jetsnack --feature-index <工程>/spec/baseline/feature-index.md
-# 2) a2h-replay-bench 的 functional-*.json(items 的 result),功能文案来自 FUNCTIONAL.md
-python3 tools/add_eval.py --tag v1.8.0-rc.1 --app Jetsnack --checklist results/jetsnack/functional-xxx.json --checklist-names FUNCTIONAL.md
-# 3) 自己写的 markdown 表 | ID | 功能 | 结果 | 说明 |,或 JSON 列表 [{id,feature,result,note}]
-python3 tools/add_eval.py --tag v1.8.0-rc.1 --app Jetsnack --checklist checklist.md
+# 链接(共享文档、仓库里的文件等)
+python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist-url https://...
+# 表格文件:复制到 releases/checklists/<tag>/<app>.<ext> 并从页面链接。markdown 表 | ID | 功能 | 结果 | 说明 |、
+# JSON 列表 [{id,feature,result,note}]、a2h-replay-bench functional-*.json 会被解析,页面给出统计和页内预览;
+# 其他格式(xlsx / pdf / html ...)原样上传并链接
+python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist checklist.md --checklist-source "张三 2026-11-01 真机评测"
 ```
 
-清单里有结论而没传 `--functional-completeness` 时,功能完备度 = 通过数 ÷ 已评测数(测不了计失败)。
+结果列写 通过 / 部分 / 不通过 / 测不了 / 未评测。解析出的清单有结论而没传 `--functional-completeness` 时,功能完备度 = 通过数 ÷ 已评测数(测不了计失败)。
 
 页面里指向私有仓的链接(安装包、sha256)只有登录的组织成员能打开;页面本身是公开的,
 所以只放结论和链接,不放报告原文。
