@@ -296,7 +296,7 @@ def evals_table(rows, out_dir):
         out.append(f"<tr><td class=app>{html.escape(r['app'])}<div class=sub>{html.escape(who)}</div></td><td class=capcell>{caps_block(r)}</td>"
                    f"<td title=\"{html.escape(tip)}\">{pct(r.get('functional_completeness'))}</td><td>{pct(r.get('usability'))}</td>"
                    f"<td>{pct(r.get('accuracy'))}</td><td>{pct(r.get('code_completeness'))}</td>"
-                   f"<td title=\"active {fmt_dur(r.get('active_seconds'))}\">{fmt_dur(r.get('duration_seconds'))}</td>"
+                   f"<td{(' title=' + chr(34) + 'active ' + fmt_dur(r['active_seconds']) + chr(34)) if r.get('active_seconds') else ''}>{fmt_dur(r.get('duration_seconds'))}</td>"
                    f"<td title=\"{html.escape(tok_tip)}\">{fmt_tok(r.get('tokens'))}</td>"
                    f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td>"
                    f"<td class=clcell>{checklist_block(r, out_dir)}</td><td class=method>{method_block(r)}</td>"

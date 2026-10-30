@@ -359,7 +359,7 @@ def main():
     caps = set(a.cap) | run_caps
     if a.project and not a.no_auto_caps:
         caps |= detect_caps(a.project)
-    elif not a.no_auto_caps:
+    elif not a.no_auto_caps and not man:
         caps.add("core")
         if (a.strategy or "") == "1to1":
             caps.add("1to1")

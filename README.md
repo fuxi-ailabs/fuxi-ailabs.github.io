@@ -4,7 +4,7 @@
 
 | 路径 | 内容 |
 |---|---|
-| `releases/` | HMBot 每次发版的迁移评测台账:每个版本下按 App 记录功能完备度、可用性、准确率、代码完备度、时间、token 与证据链接,每个 App 下可展开功能清单 |
+| `releases/` | HMBot(资源包)和 hmigbot-plus(工具包)每次发版的迁移评测台账:每个版本下按 App 记录功能完备度、可用性、准确率、代码完备度、时间、token 与证据链接,每个 App 下可展开功能清单 |
 | `releases/evals.json` | 评测数据(版本 × App 一行),用 `tools/add_eval.py` 追加,不手改 |
 | `tools/add_eval.py` | 追加一行评测:`--session-dir`(hmbot-session-archive 的输出目录,自动取时间 / token / 归档链接)、`--gt-eval`(gt-eval Eval Result,自动取功能完备度)、`--functional`(a2h-replay-bench functional json),其余指标 `--usability 0.6` / `--accuracy 90%` / `--code-completeness 26/31` 手填 |
 | `tools/build_releases.py` | 从 `fuxi-ailabs/HMBot` 的 Releases(安装包直链、源码 commit、a2h 版本)加上 `releases/evals.json` 生成 `releases/releases.json` 和 `releases/index.html`;不收集 CI 验证记录 |
@@ -38,6 +38,8 @@ python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist-url https://..
 # 其他格式(xlsx / pdf / html ...)原样上传并链接
 python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist checklist.md --checklist-source "张三 2026-11-01 真机评测"
 ```
+
+用 hmigbot-plus 工具包(hmbot CLI)跑的迁移,给 `--hmbot-run <hmigbot-plus>/examples/cli-migration-matrix/runs/<run>`:app、模型、宿主、工具包版本(→ `--plus-tag`,行挂到 hmigbot-plus 的那个 release 下)、墙钟和实际跑过的能力模块都从 manifest.yaml 读;同时给 `--tag` 时也挂到 HMBot 的 release 下。
 
 能力组合一列记录这次迁移开了哪些能力模块(core / ota / telemetry / memory / ecat / dt / visual / hitest / 1to1 / arch)。给了 `--project` 时自动探测 core、1to1 / arch(安装 profile)、ota(`.migbot/release.json`)、telemetry(`telemetry_consent`)、memory(`.claude/a2h-bench/` 或 mbm 插件);ecat / dt / visual / hitest 是 hmbot CLI 的能力,用 `--cap ecat --cap visual` 手工补。页首有十个模块的职责 / 价值说明。
 
