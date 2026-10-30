@@ -1,38 +1,5 @@
 [
  {
-  "tag": null,
-  "plus_tag": "v1.6.0",
-  "app": "diceroller",
-  "date": "2026-09-21",
-  "functional_completeness": null,
-  "usability": null,
-  "accuracy": null,
-  "code_completeness": null,
-  "duration_seconds": 9788,
-  "tokens": null,
-  "model": "GLM-5.3-Flash",
-  "hosts": [
-   "claude"
-  ],
-  "strategy": null,
-  "evidence": [],
-  "note": "hmbot run cc-glm-20260921-104345 · exit ecat=0, visual=0",
-  "hmbot_run": {
-   "name": "cc-glm-20260921-104345",
-   "toolkit": "hmigbot 1.6.0",
-   "skill_set": "migbot-set-cc",
-   "exit_codes": {
-    "ecat": 0,
-    "visual": 0
-   },
-   "reviewer": "on"
-  },
-  "caps": [
-   "ecat",
-   "visual"
-  ]
- },
- {
   "tag": "v1.8.0-rc.1",
   "app": "Jetsnack",
   "date": "2026-10-30",

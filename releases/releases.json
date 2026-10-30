@@ -1,5 +1,18 @@
 {
- "generated_utc": "2026-10-30T10:12:40.943857+00:00",
+ "generated_utc": "2026-10-30T10:15:16.447288+00:00",
+ "plus_pairs": {
+  "v1.8.1": "v1.8.0",
+  "v1.8.0-rc.1": "v1.8.0",
+  "v1.7.7": "v1.7.0",
+  "official-1.7.0-fixtures": null,
+  "v1.7.6": "v1.7.0",
+  "v1.7.5": "v1.7.0",
+  "v1.7.4": "v1.7.0",
+  "v1.7.3": "v1.7.0",
+  "v1.7.2": "v1.7.0",
+  "candidate-global-install-20261008": null,
+  "vendor-v1": null
+ },
  "products": [
   {
    "key": "hmbot",

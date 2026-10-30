@@ -142,9 +142,9 @@ def fmt_bytes(n):
     return f"{n / 1048576:.0f} MB" if n else ""
 
 
-def packages_block(e):
-    """Direct download links for the installable archives: one row per host (or the toolkit itself), one cell per platform."""
-    pk = e.get("packages") or []
+def packages_block(e, plus=None):
+    """Download links in one table: one row per HMBot host, then the paired hmigbot-plus toolkit archives."""
+    pk = list(e.get("packages") or []) + list((plus or {}).get("packages") or [])
     if not pk:
         return ""
     grid = {}
@@ -152,10 +152,10 @@ def packages_block(e):
         m = re.match(r"^(?:hmbot-(cc|codex|deveco)|hmigbot)-.*-(macos-arm64|windows-x64|Darwin-arm64|Windows-AMD64)[-.]", p["name"])
         if not m:
             continue
-        host = HOST_LABEL.get(m.group(1), "hmigbot-plus")
+        host = HOST_LABEL.get(m.group(1), f"hmigbot-plus {plus['tag']}" if plus else "hmigbot-plus")
         grid.setdefault(host, {})[PLATFORM_KEY[m.group(2)]] = p
     rows = []
-    for host in [h for h in list(HOST_LABEL.values()) + ["hmigbot-plus"] if h in grid]:
+    for host in [h for h in list(HOST_LABEL.values()) + [k for k in grid if k.startswith("hmigbot-plus")] if h in grid]:
         cells = []
         for plat in ("mac", "win"):
             p = grid[host].get(plat)
@@ -164,7 +164,10 @@ def packages_block(e):
                 continue
             sha = f' <a class=dim href="{html.escape(p["sha256_url"])}">sha256</a>' if p.get("sha256_url") else ""
             cells.append(f'<td><a href="{html.escape(p["url"])}">{html.escape(p["name"])}</a> <span class=dim>{fmt_bytes(p["bytes"])}</span>{sha}</td>')
-        rows.append(f"<tr><th>{html.escape(host)}</th>{''.join(cells)}</tr>")
+        th = html.escape(host)
+        if host.startswith("hmigbot-plus") and plus:
+            th = f'<a href="{html.escape(plus["url"])}">{th}</a>'
+        rows.append(f"<tr><th>{th}</th>{''.join(cells)}</tr>")
     return (f"<table class=pkgs><thead><tr><th>安装包</th><th>macOS arm64</th><th>Windows x64</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table>")
 
@@ -305,33 +308,43 @@ def evals_table(rows, out_dir):
             "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th><th>评估方法</th><th>migbot_session_id</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
 
 
+def pair_plus(hm_tag, plus_entries):
+    """The hmigbot-plus release that goes with an HMBot release: newest Plus release of the same major.minor."""
+    m = re.match(r"v(\d+)\.(\d+)\.", hm_tag)
+    if not m:
+        return None
+    same = [p for p in plus_entries if re.match(rf"v{m.group(1)}\.{m.group(2)}\.\d+$", p["tag"])]
+    return max(same, key=lambda p: tuple(int(x) for x in p["tag"][1:].split("."))) if same else None
+
+
 def render(products, evals, out_dir):
-    """One chronological list of cards across both products; each card carries a product chip."""
-    items = [(prod, e) for prod, entries in products for e in entries]
-    items.sort(key=lambda pe: pe[1].get("published_at") or "", reverse=True)
+    """One card per HMBot release; the paired hmigbot-plus toolkit release is folded into the card (its archives, its evaluations)."""
+    hm = next(e for p, e in products if p["key"] == "hmbot")
+    plus_entries = next(e for p, e in products if p["key"] == "plus")
+    repo = PRODUCTS[0]["repo"]
     cards = []
-    for prod, e in items:
-        repo = prod["repo"]
+    for e in hm:
         day = (e.get("published_at") or "")[:10]
         tag = e["tag"]
+        plus = pair_plus(tag, plus_entries)
         label, css = classify(tag, e.get("packages"))
         kind = f'<span class="chip {css}">{label}</span>'
-        pchip = f'<span class="chip prod {prod["key"]}" title="{html.escape(prod["blurb"])}">{html.escape(prod["title"])}</span>'
-        head = (f"<h2>{pchip} <a href=\"{html.escape(e['url'])}\">{html.escape(tag)}</a> <span class=dim>{html.escape(e['name'])}</span></h2>"
+        head = (f"<h2><a href=\"{html.escape(e['url'])}\">{html.escape(tag)}</a> <span class=dim>{html.escape(e['name'])}</span></h2>"
                 f"<div class=meta>{day} {kind}"
                 + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
                 + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
-                + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
-        rows = [r for r in evals if r.get(prod["eval_key"]) == tag]
-        body = packages_block(e) + evals_table(rows, out_dir)
-        cards.append(f"<section class=card id=\"{prod['key']}-{html.escape(tag)}\">{head}{body}</section>")
+                + (f" · 工具包 <a href=\"{html.escape(plus['url'])}\">hmigbot-plus {html.escape(plus['tag'])}</a>" if plus else "")
+                + "</div>")
+        rows = [r for r in evals if r.get("tag") == tag or (not r.get("tag") and plus and r.get("plus_tag") == plus["tag"])]
+        body = packages_block(e, plus) + evals_table(rows, out_dir)
+        cards.append(f"<section class=card id=\"{html.escape(tag)}\">{head}{body}</section>")
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HMBot release test reports</title>
 <style>{BASE_CSS}</style></head><body><main>
 <h1>HMBot release test reports</h1>
-<p class=lead>HMBot 资源包和 hmigbot-plus 工具包的每个 release 一张卡,按发布时间排在一起(卡头的标签区分产品):用这个版本迁移过的 App 各一行,记录
+<p class=lead>每个 HMBot release 一张卡,安装包表里同时给出配套的 hmigbot-plus 工具包(同一 major.minor 的最新版)下载链接:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
 未测的格子显示"未评测"。<b>能力组合</b>标出这次迁移开了哪些能力模块(亮的开了,灰的没开)。<b>功能清单</b>和<b>评估方法</b>两列是人工上传的:链接、文件或一句话。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
@@ -362,7 +375,8 @@ def main():
             entries.append(build_entry(prod["repo"], rel, prod["package_re"]))
         entries.sort(key=lambda e: e.get("published_at") or "", reverse=True)
         products.append((prod, entries))
-    (out_dir / "releases.json").write_text(json.dumps({"generated_utc": datetime.now(timezone.utc).isoformat(),
+    pairs = {e["tag"]: (pair_plus(e["tag"], products[1][1]) or {}).get("tag") for e in products[0][1]}
+    (out_dir / "releases.json").write_text(json.dumps({"generated_utc": datetime.now(timezone.utc).isoformat(), "plus_pairs": pairs,
                                                        "products": [{"key": p["key"], "repo": p["repo"], "title": p["title"], "releases": e} for p, e in products]},
                                                       ensure_ascii=False, indent=1) + "\n")
     (out_dir / "index.html").write_text(render(products, evals, out_dir))
