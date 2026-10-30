@@ -239,7 +239,8 @@ def main():
         dest_dir = SITE / "releases" / "checklists" / a.tag
         dest_dir.mkdir(parents=True, exist_ok=True)
         dest = dest_dir / (re.sub(r"[^\w.-]+", "_", a.app) + src.suffix.lower())
-        shutil.copyfile(src, dest)
+        if src.resolve() != dest.resolve():
+            shutil.copyfile(src, dest)
         row["checklist_file"] = str(dest.relative_to(SITE / "releases"))
         row["checklist_source"] = a.checklist_source or src.name
         try:
@@ -257,7 +258,8 @@ def main():
             dest_dir = SITE / "releases" / "methods" / a.tag
             dest_dir.mkdir(parents=True, exist_ok=True)
             dest = dest_dir / (re.sub(r"[^\w.-]+", "_", a.app) + src.suffix.lower())
-            shutil.copyfile(src, dest)
+            if src.resolve() != dest.resolve():
+                shutil.copyfile(src, dest)
             row["method_file"] = str(dest.relative_to(SITE / "releases"))
             print(f"uploaded method file -> releases/{row['method_file']}")
         else:

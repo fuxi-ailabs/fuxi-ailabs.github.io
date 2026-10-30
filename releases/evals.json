@@ -32,8 +32,9 @@
   },
   "hmbot_version": "1.8.0-rc.1",
   "run_id": "47f8c2ff-b1d4-4777-8448-c9f85a84f71f",
+  "migbot_session_id": "f265794e-1483-4ee0-937b-69d02eb940ef",
   "checklist_file": "checklists/v1.8.0-rc.1/Jetsnack.md",
-  "checklist_source": "清单取自 spec/baseline/feature-index.md,结果待人工填写",
+  "checklist_source": "Jetsnack.md",
   "checklist": [
    {
     "id": "F001",
