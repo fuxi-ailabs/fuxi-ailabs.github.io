@@ -7,8 +7,7 @@
 | `releases/` | HMBot 每次发版的迁移评测台账:每个版本下按 App 记录功能完备度、可用性、准确率、代码完备度、时间、token 与证据链接,每个 App 下可展开功能清单 |
 | `releases/evals.json` | 评测数据(版本 × App 一行),用 `tools/add_eval.py` 追加,不手改 |
 | `tools/add_eval.py` | 追加一行评测:`--session-dir`(hmbot-session-archive 的输出目录,自动取时间 / token / 归档链接)、`--gt-eval`(gt-eval Eval Result,自动取功能完备度)、`--functional`(a2h-replay-bench functional json),其余指标 `--usability 0.6` / `--accuracy 90%` / `--code-completeness 26/31` 手填 |
-| `tools/build_releases.py` | 从 `fuxi-ailabs/HMBot` 的 Releases 与 Release Notes 加上 `releases/evals.json` 生成 `releases/releases.json` 和 `releases/index.html` |
-| `releases/overrides.json` | 手工补充的报告链接 / 备注,按 tag 归档;生成时合并进去 |
+| `tools/build_releases.py` | 从 `fuxi-ailabs/HMBot` 的 Releases(安装包直链、源码 commit、a2h 版本)加上 `releases/evals.json` 生成 `releases/releases.json` 和 `releases/index.html`;不收集 CI 验证记录 |
 | `tools/build-releases.workflow.yml` | 每日自动重建的 workflow 定义。推送它需要带 `workflow` scope 的 token(`gh auth refresh -s workflow`),然后移到 `.github/workflows/`;运行还需要仓库 secret `HMBOT_TOKEN`(对 HMBot 有 contents:read + actions:read 的 PAT) |
 
 ## 本地重建
@@ -42,7 +41,5 @@ python3 tools/add_eval.py --tag v1.8.0-rc.1 --app Jetsnack --checklist checklist
 
 清单里有结论而没传 `--functional-completeness` 时,功能完备度 = 通过数 ÷ 已评测数(测不了计失败)。
 
-补一条手工报告链接:在 `releases/overrides.json` 对应 tag 下加 `{"title","url","note"}`,重跑脚本。
-
-页面里指向私有仓的链接(Actions artifacts、Release assets、docs)只有登录的组织成员能打开;页面本身是公开的,
+页面里指向私有仓的链接(安装包、sha256)只有登录的组织成员能打开;页面本身是公开的,
 所以只放结论和链接,不放报告原文。

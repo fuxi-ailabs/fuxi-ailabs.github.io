@@ -1,7 +1,0 @@
-{
- "v1.8.0-rc.1": {
-  "reports": [
-   {"title": "codex-desktop-rc-runtime-1.5.8-2026-10-27.json", "url": "https://github.com/fuxi-ailabs/HMBot/blob/main/docs/validation/codex-desktop-rc-runtime-1.5.8-2026-10-27.json", "note": "repository acceptance record: runtime 1.5.8 release + RC revalidation, 16 business-comparison groups"}
-  ]
- }
-}
