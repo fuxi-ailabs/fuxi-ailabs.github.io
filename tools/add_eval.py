@@ -18,6 +18,10 @@ Each row's 功能清单 column is something a person uploads: a link, or a table
                         markdown table | ID | 功能 | 结果 | 说明 |  (结果: 通过/部分/不通过/测不了/未评测 or pass/partial/fail/untestable/untested),
                         JSON list [{id, feature, result, note}], a2h-replay-bench functional-*.json (names via --checklist-names FUNCTIONAL.md).
                         Other files (xlsx, pdf, html, ...) are uploaded and linked as-is.
+A migration done through the hmigbot-plus toolkit (hmbot CLI, see the hmbot-replay-migrate skill) is recorded with
+  --hmbot-run <examples/cli-migration-matrix/runs/<run>>: app, model, host, toolkit version (→ --plus-tag), wall time and
+  the capability modules that ran (pipeline → core, ecat / dt / visual / hitest, recall-log → memory) come from manifest.yaml.
+  Give --tag as well when the run used an HMBot release's skill set, so the row shows under both products.
 能力组合 (which HMBot capability modules were on for this migration) is a list of module keys:
   core (0-1 迁移 Core), ota, telemetry (数据上报), memory, ecat, dt, visual, hitest, 1to1 (1:1 复制), arch (架构迁移).
   --cap KEY (repeatable) adds modules by hand; with --project the detectable ones are filled in automatically:
@@ -135,6 +139,49 @@ def from_functional(path, row):
     return row
 
 
+def parse_manifest(path):
+    """Minimal reader for hmigbot-plus run manifest.yaml: top-level `key: value` lines plus the indented exit_codes map."""
+    out, block = {}, None
+    for line in path.read_text().splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if line.startswith("  ") and block is not None:
+            k, _, v = line.strip().partition(":")
+            out[block][k.strip()] = v.strip()
+            continue
+        k, _, v = line.partition(":")
+        k, v = k.strip(), v.strip()
+        if v == "":
+            out[k] = {}
+            block = k
+        else:
+            out[k] = v
+            block = None
+    return out
+
+
+def from_hmbot_run(run_dir, man, row):
+    """Fill the row from a hmigbot-plus CLI run; returns the capability modules that actually ran."""
+    line = man.get("line") or ""
+    row["model"] = row.get("model") or man.get("model")
+    row["hosts"] = row.get("hosts") or ([{"cc": "claude", "codex": "codex", "icode": "icode", "deveco": "icode"}.get(line, line)] if line else None)
+    if man.get("started_at") and man.get("finished_at") and not row.get("duration_seconds"):
+        t0 = datetime.fromisoformat(man["started_at"].replace("Z", "+00:00"))
+        t1 = datetime.fromisoformat(man["finished_at"].replace("Z", "+00:00"))
+        row["duration_seconds"] = int((t1 - t0).total_seconds())
+    codes = man.get("exit_codes") or {}
+    ran = {k for k, v in codes.items() if v != "not_run"}
+    caps = {"core"} if "pipeline" in ran else set()
+    caps |= {c for c in ("ecat", "dt", "visual", "hitest") if c in ran}
+    if (run_dir / "recall-log.txt").is_file() or (run_dir / "memory").is_dir():
+        caps.add("memory")
+    row["hmbot_run"] = {"name": man.get("run_name") or run_dir.name, "toolkit": man.get("hmbot") or man.get("hmigbot"),
+                        "skill_set": Path(man["skill_set"]).name if man.get("skill_set") else None,
+                        "exit_codes": {k: (int(v) if v.isdigit() else v) for k, v in codes.items()}, "reviewer": man.get("reviewer")}
+    row["note"] = row.get("note") or ("hmbot run " + row["hmbot_run"]["name"] + " · exit " + ", ".join(f"{k}={v}" for k, v in codes.items()))
+    return caps
+
+
 CAPS = ("core", "ota", "telemetry", "memory", "ecat", "dt", "visual", "hitest", "1to1", "arch")
 
 
@@ -228,8 +275,11 @@ def _unused_load_feature_index(path):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--site", default=str(Path(__file__).resolve().parent.parent))
-    ap.add_argument("--tag", required=True, help="HMBot release tag, e.g. v1.8.1")
-    ap.add_argument("--app", required=True)
+    ap.add_argument("--tag", help="HMBot release tag the migration used, e.g. v1.8.1")
+    ap.add_argument("--plus-tag", help="hmigbot-plus (toolkit) release tag, e.g. v1.7.0; filled from --hmbot-run when omitted")
+    ap.add_argument("--hmbot-run", help="hmigbot-plus CLI run dir (examples/cli-migration-matrix/runs/<run>): app, model, host, "
+                                        "toolkit version, time and the capability modules that ran come from its manifest.yaml")
+    ap.add_argument("--app", help="App name (default: app_name from --hmbot-run)")
     ap.add_argument("--session-dir")
     ap.add_argument("--project", help="with --session-dir: project dir, to recompute time/tokens when the archive has no stats")
     ap.add_argument("--gt-eval")
@@ -257,17 +307,30 @@ def main():
     ap.add_argument("--remove", action="store_true", help="delete the row for --tag/--app")
     a = ap.parse_args()
 
+    man = parse_manifest(Path(a.hmbot_run).expanduser() / "manifest.yaml") if a.hmbot_run else {}
+    a.app = a.app or man.get("app_name")
+    ver = re.search(r"(\d+\.\d+\.\d+)", man.get("hmbot") or man.get("hmigbot") or "")
+    a.plus_tag = a.plus_tag or (f"v{ver.group(1)}" if ver else None)
+    if not a.app:
+        sys.exit("--app is required (or --hmbot-run with app_name in its manifest)")
+    if not (a.tag or a.plus_tag):
+        sys.exit("give --tag (HMBot release) and/or --plus-tag (hmigbot-plus release)")
+
     f = Path(a.site) / "releases" / "evals.json"
     rows = json.loads(f.read_text()) if f.is_file() else []
-    rows = [r for r in rows if not (r["tag"] == a.tag and r["app"].lower() == a.app.lower())]
+    same = lambda r: r.get("tag") == a.tag and r.get("plus_tag") == a.plus_tag and r["app"].lower() == a.app.lower()
+    rows = [r for r in rows if not same(r)]
     if a.remove:
         f.write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n")
-        print(f"removed {a.tag} {a.app}")
+        print(f"removed {a.tag or ''} {a.plus_tag or ''} {a.app}")
         return
-    row = {"tag": a.tag, "app": a.app, "date": a.date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+    row = {"tag": a.tag, "plus_tag": a.plus_tag, "app": a.app, "date": a.date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
            "functional_completeness": None, "usability": None, "accuracy": None, "code_completeness": None,
            "duration_seconds": None, "tokens": None, "model": a.model, "hosts": a.host, "strategy": a.strategy,
            "evidence": [], "note": a.note}
+    run_caps = set()
+    if man:
+        run_caps = from_hmbot_run(Path(a.hmbot_run).expanduser(), man, row)
     if a.session_dir:
         from_session_dir(a.session_dir, row, a.project)
     if a.gt_eval:
@@ -293,7 +356,7 @@ def main():
         print(f"uploaded checklist file -> releases/{row['checklist_file']}")
     if a.migbot_session_id:
         row["migbot_session_id"] = a.migbot_session_id
-    caps = set(a.cap)
+    caps = set(a.cap) | run_caps
     if a.project and not a.no_auto_caps:
         caps |= detect_caps(a.project)
     elif not a.no_auto_caps:
@@ -334,7 +397,7 @@ def main():
         t, _, u = e.partition("=") if "=" in e and not e.startswith("http") else ("evidence", "=", e)
         row["evidence"].append({"title": t, "url": u})
     rows.append(row)
-    rows.sort(key=lambda r: (r["tag"], r["app"]))
+    rows.sort(key=lambda r: (r.get("tag") or "", r.get("plus_tag") or "", r["app"]))
     f.write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n")
     if cl:
         print(f"checklist: {len(cl)} items from {row.get('checklist_source')}")

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Build the HMBot release ledger (releases/releases.json + releases/index.html) from fuxi-ailabs/HMBot.
+"""Build the release ledger (releases/releases.json + releases/index.html) from fuxi-ailabs/HMBot.
 
 For every GitHub Release it records: tag, date, kind (from the tag), the installable product archives with direct
 download links, the HMBot source commit and a2h version from the release notes. Migration evaluations per App
 come from releases/evals.json (written by tools/add_eval.py). No CI verification records are collected.
 Needs `gh` logged in with read access to HMBot.
 
-Usage: build_releases.py [--repo fuxi-ailabs/HMBot] [--site DIR] [--limit N]
+Covers two products: fuxi-ailabs/HMBot (resource packages) and fuxi-ailabs/hmigbot-plus (toolkit); evaluation rows attach
+to an HMBot tag (`tag`) and/or a hmigbot-plus tag (`plus_tag`).
+
+Usage: build_releases.py [--site DIR] [--limit N]
 """
 from __future__ import annotations
 
@@ -19,7 +22,15 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PACKAGE_RE = re.compile(r"^hmbot-(cc|codex|deveco)-.*\.(tar\.gz|zip)(\.sha256)?$")
+PRODUCTS = [
+    {"key": "hmbot", "repo": "fuxi-ailabs/HMBot", "title": "HMBot",
+     "blurb": "迁移资源包:Claude Code / Codex / DevEco 三种宿主的 skills、sub-agents、命令与 a2h 运行时;对应能力模块 0-1 迁移 Core、OTA、数据上报、1:1 复制、架构迁移。",
+     "package_re": re.compile(r"^hmbot-(cc|codex|deveco)-.*-(macos-arm64|windows-x64)\.(tar\.gz|zip)$"), "eval_key": "tag"},
+    {"key": "plus", "repo": "fuxi-ailabs/hmigbot-plus", "title": "hmigbot-plus",
+     "blurb": "工具包:hmbot CLI 按能力分段驱动迁移,提供 Reviewer 与 ECAT / DT / Visual / HiTest / Memory 等能力模块;评测行按 hmbot 运行记录的工具包版本挂在这里。",
+     "package_re": re.compile(r"^hmigbot-.*-(Darwin-arm64|Windows-AMD64)-pyinst\.(tar\.gz|zip)$"), "eval_key": "plus_tag"},
+]
+PLATFORM_KEY = {"macos-arm64": "mac", "Darwin-arm64": "mac", "windows-x64": "win", "Windows-AMD64": "win"}
 
 
 def log(msg):
@@ -50,11 +61,11 @@ def releases(repo, limit):
 
 
 
-def build_entry(repo, rel):
+def build_entry(repo, rel, package_re):
     body = rel.get("body") or ""
     tag = rel["tagName"]
     assets = rel.get("assets") or []
-    packages = [a for a in assets if PACKAGE_RE.match(a["name"]) and not a["name"].endswith(".sha256")]
+    packages = [a for a in assets if package_re.match(a["name"])]
     commit = None
     best = -1
     for m in re.finditer(r"\b([0-9a-f]{40})\b", body):   # prefer the hash described as the HMBot source, not a2h's
@@ -96,8 +107,8 @@ def classify(tag, packages):
 # ── rendering ─────────────────────────────────────────────────────────────────
 BASE_CSS = """:root{color-scheme:light dark;--fg:#1a1a1a;--bg:#fff;--dim:#6b6b6b;--line:#e4e4e4;--card:#fafafa;--link:#0b57d0;--ok:#e6f4ea;--okfg:#137333;--bad:#fce8e6;--badfg:#c5221f;--warn:#fef7e0;--warnfg:#b06000;--chip:#eee}
 @media(prefers-color-scheme:dark){:root{--fg:#e6e6e6;--bg:#121212;--dim:#9a9a9a;--line:#2b2b2b;--card:#1a1a1a;--link:#8ab4f8;--ok:#1e3a2a;--okfg:#81c995;--bad:#3c1f1d;--badfg:#f28b82;--warn:#3a2e14;--warnfg:#fdd663;--chip:#2a2a2a}}
-body{margin:0;padding:32px 24px;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg)}
-main{max-width:1000px;margin:0 auto} h1{font-size:22px;margin:0 0 6px} .lead{color:var(--dim);margin:0 0 24px;max-width:80ch}
+body{margin:0;padding:28px 2vw;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg)}
+main{max-width:1720px;width:min(100%,96vw);margin:0 auto} h1{font-size:22px;margin:0 0 6px} .lead{color:var(--dim);margin:0 0 24px;max-width:80ch}
 .card{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:16px 18px;margin:0 0 16px}
 .card h2{font-size:17px;margin:0 0 2px} .card h2 a{color:var(--fg);text-decoration:none} .card h2 a:hover{text-decoration:underline}
 .meta{color:var(--dim);font-size:13px;margin-bottom:10px} code{font-size:12px}
@@ -125,7 +136,6 @@ def chip(text, kind="ok"):
 
 
 HOST_LABEL = {"cc": "Claude Code", "codex": "Codex", "deveco": "DevEco"}
-PLATFORM_LABEL = {"macos-arm64": "macOS arm64", "windows-x64": "Windows x64"}
 
 
 def fmt_bytes(n):
@@ -133,33 +143,30 @@ def fmt_bytes(n):
 
 
 def packages_block(e):
-    """Direct download links for the installable product archives, one row per host, one cell per platform."""
+    """Direct download links for the installable archives: one row per host (or the toolkit itself), one cell per platform."""
     pk = e.get("packages") or []
     if not pk:
         return ""
     grid = {}
     for p in pk:
-        m = re.match(r"^hmbot-(cc|codex|deveco)-(.+?)-(macos-arm64|windows-x64)\.(tar\.gz|zip)$", p["name"])
+        m = re.match(r"^(?:hmbot-(cc|codex|deveco)|hmigbot)-.*-(macos-arm64|windows-x64|Darwin-arm64|Windows-AMD64)[-.]", p["name"])
         if not m:
             continue
-        grid.setdefault(m.group(1), {})[m.group(3)] = p
+        host = HOST_LABEL.get(m.group(1), "hmigbot-plus")
+        grid.setdefault(host, {})[PLATFORM_KEY[m.group(2)]] = p
     rows = []
-    for host in ("cc", "codex", "deveco"):
-        if host not in grid:
-            continue
+    for host in [h for h in list(HOST_LABEL.values()) + ["hmigbot-plus"] if h in grid]:
         cells = []
-        for plat in ("macos-arm64", "windows-x64"):
+        for plat in ("mac", "win"):
             p = grid[host].get(plat)
             if not p:
                 cells.append("<td class=dim>—</td>")
                 continue
             sha = f' <a class=dim href="{html.escape(p["sha256_url"])}">sha256</a>' if p.get("sha256_url") else ""
             cells.append(f'<td><a href="{html.escape(p["url"])}">{html.escape(p["name"])}</a> <span class=dim>{fmt_bytes(p["bytes"])}</span>{sha}</td>')
-        rows.append(f"<tr><th>{HOST_LABEL[host]}</th>{''.join(cells)}</tr>")
-    return (f"<table class=pkgs><thead><tr><th>安装包</th><th>{PLATFORM_LABEL['macos-arm64']}</th><th>{PLATFORM_LABEL['windows-x64']}</th></tr></thead>"
+        rows.append(f"<tr><th>{html.escape(host)}</th>{''.join(cells)}</tr>")
+    return (f"<table class=pkgs><thead><tr><th>安装包</th><th>macOS arm64</th><th>Windows x64</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table>")
-
-
 
 
 def pct(v):
@@ -280,7 +287,8 @@ def evals_table(rows, out_dir):
         return "<p class=na>这个版本还没有迁移评测记录。</p>"
     out = []
     for r in sorted(rows, key=lambda r: r["app"].lower()):
-        who = " · ".join(x for x in [r.get("model"), ", ".join(r.get("hosts") or []), r.get("strategy")] if x)
+        who = " · ".join(x for x in [r.get("model"), ", ".join(r.get("hosts") or []), r.get("strategy"),
+                                     f"HMBot {r['tag']}" if r.get("tag") else None, f"Plus {r['plus_tag']}" if r.get("plus_tag") else None] if x)
         ev = " ".join(f'<a href="{html.escape(e["url"])}" title="{html.escape(e.get("title", ""))}">{html.escape(e.get("title") or "link")}</a>' for e in r.get("evidence") or [])
         tip = r.get("functional_basis") or ""
         tok = r.get("tokens_breakdown") or {}
@@ -297,32 +305,39 @@ def evals_table(rows, out_dir):
             "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th><th>评估方法</th><th>migbot_session_id</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
 
 
-def render(entries, repo, evals, out_dir):
-    cards = []
-    for e in entries:
-        day = (e.get("published_at") or "")[:10]
-        tag = e["tag"]
-        label, css = classify(tag, e.get("packages"))
-        kind = f'<span class="chip {css}">{label}</span>'
-        head = (f"<h2><a href=\"{html.escape(e['url'])}\">{html.escape(tag)}</a> <span class=dim>{html.escape(e['name'])}</span></h2>"
-                f"<div class=meta>{day} {kind}"
-                + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
-                + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
-                + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
-        body = packages_block(e) + evals_table(evals.get(tag, []), out_dir)
-        cards.append(f"<section class=card id=\"{html.escape(tag)}\">{head}{body}</section>")
+def render(products, evals, out_dir):
+    sections = []
+    for prod, entries in products:
+        repo = prod["repo"]
+        cards = []
+        for e in entries:
+            day = (e.get("published_at") or "")[:10]
+            tag = e["tag"]
+            label, css = classify(tag, e.get("packages"))
+            kind = f'<span class="chip {css}">{label}</span>'
+            head = (f"<h2><a href=\"{html.escape(e['url'])}\">{html.escape(tag)}</a> <span class=dim>{html.escape(e['name'])}</span></h2>"
+                    f"<div class=meta>{day} {kind}"
+                    + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
+                    + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
+                    + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
+            rows = [r for r in evals if r.get(prod["eval_key"]) == tag]
+            body = packages_block(e) + evals_table(rows, out_dir)
+            cards.append(f"<section class=card id=\"{prod['key']}-{html.escape(tag)}\">{head}{body}</section>")
+        sections.append(f"<h2 class=product id=\"{prod['key']}\"><a href=\"https://github.com/{repo}/releases\">{html.escape(prod['title'])}</a></h2>"
+                        f"<p class=lead>{html.escape(prod['blurb'])}</p>{''.join(cards)}")
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HMBot release test reports</title>
 <style>{BASE_CSS}</style></head><body><main>
 <h1>HMBot release test reports</h1>
-<p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
+<nav class=toc>{' · '.join(f'<a href="#{p["key"]}">{html.escape(p["title"])}</a>' for p in PRODUCTS)}</nav>
+<p class=lead>两个产品(HMBot 资源包、hmigbot-plus 工具包)的每个 release 一张卡:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
 未测的格子显示"未评测"。<b>能力组合</b>标出这次迁移开了哪些能力模块(亮的开了,灰的没开)。<b>功能清单</b>和<b>评估方法</b>两列是人工上传的:链接、文件或一句话。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
 {caps_legend()}
-{''.join(cards)}
+{''.join(sections)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>)</footer>
 </main></body></html>
 """
@@ -330,28 +345,29 @@ def render(entries, repo, evals, out_dir):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--repo", default="fuxi-ailabs/HMBot")
     ap.add_argument("--site", default=str(Path(__file__).resolve().parent.parent))
     ap.add_argument("--limit", type=int, default=100)
     args = ap.parse_args()
     site = Path(args.site)
     out_dir = site / "releases"
     out_dir.mkdir(parents=True, exist_ok=True)
-    entries = []
-    for rel in releases(args.repo, args.limit):
-        if rel.get("isDraft"):
-            continue
-        log(rel["tagName"])
-        entries.append(build_entry(args.repo, rel))
-    entries.sort(key=lambda e: e.get("published_at") or "", reverse=True)
-    (out_dir / "releases.json").write_text(json.dumps({"repo": args.repo, "generated_utc": datetime.now(timezone.utc).isoformat(),
-                                                       "releases": entries}, ensure_ascii=False, indent=1) + "\n")
     ev_file = out_dir / "evals.json"
-    evals = {}
-    for r in (json.loads(ev_file.read_text()) if ev_file.is_file() else []):
-        evals.setdefault(r["tag"], []).append(r)
-    (out_dir / "index.html").write_text(render(entries, args.repo, evals, out_dir))
-    log(f"wrote {out_dir / 'releases.json'} and index.html ({len(entries)} releases)")
+    evals = json.loads(ev_file.read_text()) if ev_file.is_file() else []
+    products = []
+    for prod in PRODUCTS:
+        entries = []
+        for rel in releases(prod["repo"], args.limit):
+            if rel.get("isDraft"):
+                continue
+            log(f"{prod['key']} {rel['tagName']}")
+            entries.append(build_entry(prod["repo"], rel, prod["package_re"]))
+        entries.sort(key=lambda e: e.get("published_at") or "", reverse=True)
+        products.append((prod, entries))
+    (out_dir / "releases.json").write_text(json.dumps({"generated_utc": datetime.now(timezone.utc).isoformat(),
+                                                       "products": [{"key": p["key"], "repo": p["repo"], "title": p["title"], "releases": e} for p, e in products]},
+                                                      ensure_ascii=False, indent=1) + "\n")
+    (out_dir / "index.html").write_text(render(products, evals, out_dir))
+    log(f"wrote {out_dir / 'releases.json'} and index.html ({sum(len(e) for _, e in products)} releases, {len(evals)} evaluations)")
 
 
 if __name__ == "__main__":
