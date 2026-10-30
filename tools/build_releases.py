@@ -224,17 +224,9 @@ def checklist_block(r, out_dir):
             link = (str(f), f.name)
     elif r.get("checklist_url"):
         link = (r["checklist_url"], "查看清单")
-    if not link and not cl:
+    if not link:
         return "<span class=dim>未上传</span>"
-    parts = []
-    if link:
-        parts.append(f'<a href="{html.escape(link[0])}">{html.escape(link[1])}</a>')
-    if cl:
-        parts.append(f"<details class=cl><summary>{len(cl)} 项 · {checklist_counts(cl)}</summary>"
-                     f"<table class=checklist><thead><tr><th>ID</th><th>功能</th><th>结果</th><th>说明</th></tr></thead><tbody>{checklist_rows_html(cl)}</tbody></table></details>")
-    if r.get("checklist_source"):
-        parts.append(f'<div class=sub>{html.escape(r["checklist_source"])}</div>')
-    return "".join(parts)
+    return f'<a href="{html.escape(link[0])}">{html.escape(link[1])}</a>'
 
 def evals_table(rows, out_dir):
     if not rows:
@@ -280,7 +272,7 @@ def render(entries, repo, evals, out_dir):
 <p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
-未测的格子显示"未评测"。<b>功能清单</b>一列是人工上传的清单:链接或表格,表格可在页内展开预览。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
+未测的格子显示"未评测"。<b>功能清单</b>一列是人工上传的清单:链接或表格。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
 {''.join(cards)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>)</footer>
 </main></body></html>
