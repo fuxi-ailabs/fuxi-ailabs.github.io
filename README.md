@@ -4,7 +4,7 @@
 
 | 路径 | 内容 |
 |---|---|
-| `releases/` | HMBot(资源包)和 hmigbot-plus(工具包)每次发版的迁移评测台账:每个版本下按 App 记录功能完备度、可用性、准确率、代码完备度、时间、token 与证据链接,每个 App 下可展开功能清单 |
+| `releases/` | HMBot(资源包)和 hmigbot-plus(工具包)的发版按时间排在一起,每个 release 一张卡,卡头标签区分产品;记录迁移评测台账:每个版本下按 App 记录功能完备度、可用性、准确率、代码完备度、时间、token 与证据链接,每个 App 下可展开功能清单 |
 | `releases/evals.json` | 评测数据(版本 × App 一行),用 `tools/add_eval.py` 追加,不手改 |
 | `tools/add_eval.py` | 追加一行评测:`--session-dir`(hmbot-session-archive 的输出目录,自动取时间 / token / 归档链接)、`--gt-eval`(gt-eval Eval Result,自动取功能完备度)、`--functional`(a2h-replay-bench functional json),其余指标 `--usability 0.6` / `--accuracy 90%` / `--code-completeness 26/31` 手填 |
 | `tools/build_releases.py` | 从 `fuxi-ailabs/HMBot` 的 Releases(安装包直链、源码 commit、a2h 版本)加上 `releases/evals.json` 生成 `releases/releases.json` 和 `releases/index.html`;不收集 CI 验证记录 |

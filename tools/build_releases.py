@@ -306,38 +306,37 @@ def evals_table(rows, out_dir):
 
 
 def render(products, evals, out_dir):
-    sections = []
-    for prod, entries in products:
+    """One chronological list of cards across both products; each card carries a product chip."""
+    items = [(prod, e) for prod, entries in products for e in entries]
+    items.sort(key=lambda pe: pe[1].get("published_at") or "", reverse=True)
+    cards = []
+    for prod, e in items:
         repo = prod["repo"]
-        cards = []
-        for e in entries:
-            day = (e.get("published_at") or "")[:10]
-            tag = e["tag"]
-            label, css = classify(tag, e.get("packages"))
-            kind = f'<span class="chip {css}">{label}</span>'
-            head = (f"<h2><a href=\"{html.escape(e['url'])}\">{html.escape(tag)}</a> <span class=dim>{html.escape(e['name'])}</span></h2>"
-                    f"<div class=meta>{day} {kind}"
-                    + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
-                    + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
-                    + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
-            rows = [r for r in evals if r.get(prod["eval_key"]) == tag]
-            body = packages_block(e) + evals_table(rows, out_dir)
-            cards.append(f"<section class=card id=\"{prod['key']}-{html.escape(tag)}\">{head}{body}</section>")
-        sections.append(f"<h2 class=product id=\"{prod['key']}\"><a href=\"https://github.com/{repo}/releases\">{html.escape(prod['title'])}</a></h2>"
-                        f"<p class=lead>{html.escape(prod['blurb'])}</p>{''.join(cards)}")
+        day = (e.get("published_at") or "")[:10]
+        tag = e["tag"]
+        label, css = classify(tag, e.get("packages"))
+        kind = f'<span class="chip {css}">{label}</span>'
+        pchip = f'<span class="chip prod {prod["key"]}" title="{html.escape(prod["blurb"])}">{html.escape(prod["title"])}</span>'
+        head = (f"<h2>{pchip} <a href=\"{html.escape(e['url'])}\">{html.escape(tag)}</a> <span class=dim>{html.escape(e['name'])}</span></h2>"
+                f"<div class=meta>{day} {kind}"
+                + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
+                + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
+                + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
+        rows = [r for r in evals if r.get(prod["eval_key"]) == tag]
+        body = packages_block(e) + evals_table(rows, out_dir)
+        cards.append(f"<section class=card id=\"{prod['key']}-{html.escape(tag)}\">{head}{body}</section>")
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HMBot release test reports</title>
 <style>{BASE_CSS}</style></head><body><main>
 <h1>HMBot release test reports</h1>
-<nav class=toc>{' · '.join(f'<a href="#{p["key"]}">{html.escape(p["title"])}</a>' for p in PRODUCTS)}</nav>
-<p class=lead>两个产品(HMBot 资源包、hmigbot-plus 工具包)的每个 release 一张卡:用这个版本迁移过的 App 各一行,记录
+<p class=lead>HMBot 资源包和 hmigbot-plus 工具包的每个 release 一张卡,按发布时间排在一起(卡头的标签区分产品):用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
 未测的格子显示"未评测"。<b>能力组合</b>标出这次迁移开了哪些能力模块(亮的开了,灰的没开)。<b>功能清单</b>和<b>评估方法</b>两列是人工上传的:链接、文件或一句话。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
 {caps_legend()}
-{''.join(sections)}
+{''.join(cards)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>)</footer>
 </main></body></html>
 """
