@@ -1,0 +1,37 @@
+name: build-releases
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * *"   # daily 02:17 UTC
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check token
+        id: tok
+        env:
+          HMBOT_TOKEN: ${{ secrets.HMBOT_TOKEN }}
+        run: |
+          if [ -z "$HMBOT_TOKEN" ]; then echo "HMBOT_TOKEN secret not set; skipping" ; echo "ok=false" >> "$GITHUB_OUTPUT"; else echo "ok=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Cache verification artifacts
+        if: steps.tok.outputs.ok == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hmbot-release-reports
+          key: hmbot-release-reports-${{ github.run_id }}
+          restore-keys: hmbot-release-reports-
+      - name: Build
+        if: steps.tok.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.HMBOT_TOKEN }}
+        run: python3 tools/build_releases.py
+      - name: Commit
+        if: steps.tok.outputs.ok == 'true'
+        run: |
+          git config user.name "build-releases"
+          git config user.email "build-releases@users.noreply.github.com"
+          git add releases
+          git diff --cached --quiet || { git commit -m "releases: refresh $(date -u +%Y-%m-%d)"; git push; }
