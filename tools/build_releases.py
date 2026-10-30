@@ -231,7 +231,8 @@ def build_entry(repo, rel, cache, overrides, with_artifacts):
     return {
         "tag": tag, "name": rel.get("name") or tag, "url": rel["url"], "published_at": rel.get("publishedAt"),
         "prerelease": rel.get("isPrerelease"), "kind": classify(tag, packages)[0],
-        "packages": [{"name": p["name"], "bytes": p["size"]} for p in packages],
+        "packages": [{"name": p["name"], "bytes": p["size"], "url": p["url"], "downloads": p.get("downloadCount"),
+                      "sha256_url": next((a["url"] for a in assets if a["name"] == p["name"] + ".sha256"), None)} for p in packages],
         "source_commit": commit, "a2h_version": a2h, "business_comparisons": business,
         "runs": runs, "prs": [{"repo": r, "number": int(n), "url": f"https://github.com/{r}/pull/{n}"} for r, n in prs],
         "attached_reports": attached, "matrix": matrix,
@@ -256,6 +257,42 @@ def classify(tag, packages):
 # ── rendering ─────────────────────────────────────────────────────────────────
 def chip(text, kind="ok"):
     return f'<span class="chip {kind}">{html.escape(text)}</span>'
+
+
+HOST_LABEL = {"cc": "Claude Code", "codex": "Codex", "deveco": "DevEco"}
+PLATFORM_LABEL = {"macos-arm64": "macOS arm64", "windows-x64": "Windows x64"}
+
+
+def fmt_bytes(n):
+    return f"{n / 1048576:.0f} MB" if n else ""
+
+
+def packages_block(e):
+    """Direct download links for the installable product archives, one row per host, one cell per platform."""
+    pk = e.get("packages") or []
+    if not pk:
+        return ""
+    grid = {}
+    for p in pk:
+        m = re.match(r"^hmbot-(cc|codex|deveco)-(.+?)-(macos-arm64|windows-x64)\.(tar\.gz|zip)$", p["name"])
+        if not m:
+            continue
+        grid.setdefault(m.group(1), {})[m.group(3)] = p
+    rows = []
+    for host in ("cc", "codex", "deveco"):
+        if host not in grid:
+            continue
+        cells = []
+        for plat in ("macos-arm64", "windows-x64"):
+            p = grid[host].get(plat)
+            if not p:
+                cells.append("<td class=dim>—</td>")
+                continue
+            sha = f' <a class=dim href="{html.escape(p["sha256_url"])}">sha256</a>' if p.get("sha256_url") else ""
+            cells.append(f'<td><a href="{html.escape(p["url"])}">{html.escape(p["name"])}</a> <span class=dim>{fmt_bytes(p["bytes"])}</span>{sha}</td>')
+        rows.append(f"<tr><th>{HOST_LABEL[host]}</th>{''.join(cells)}</tr>")
+    return (f"<table class=pkgs><thead><tr><th>安装包</th><th>{PLATFORM_LABEL['macos-arm64']}</th><th>{PLATFORM_LABEL['windows-x64']}</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>")
 
 
 def matrix_table(matrix, repo):
@@ -355,7 +392,7 @@ def render(entries, repo, evals):
                 + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
                 + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
                 + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
-        body = evals_table(evals.get(tag, []))
+        body = packages_block(e) + evals_table(evals.get(tag, []))
         cards.append(f"<section class=card id=\"{html.escape(tag)}\">{head}{body}</section>")
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
@@ -369,6 +406,8 @@ main{{max-width:1000px;margin:0 auto}} h1{{font-size:22px;margin:0 0 6px}} .lead
 .card{{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:16px 18px;margin:0 0 16px}}
 .card h2{{font-size:17px;margin:0 0 2px}} .card h2 a{{color:var(--fg);text-decoration:none}} .card h2 a:hover{{text-decoration:underline}}
 .meta{{color:var(--dim);font-size:13px;margin-bottom:10px}} code{{font-size:12px}}
+table.pkgs{{border-collapse:collapse;margin:0 0 12px;font-size:13px}} .pkgs th,.pkgs td{{text-align:left;padding:4px 14px 4px 0;border-bottom:1px solid var(--line);vertical-align:top}}
+.pkgs thead th{{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}} .pkgs tbody th{{font-weight:600;white-space:nowrap}} .pkgs a{{word-break:break-all}} .pkgs a.dim{{color:var(--dim)}}
 .chips{{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}} .chip{{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;background:var(--chip);color:var(--fg);text-decoration:none}}
 .chip.ok{{background:var(--ok);color:var(--okfg)}} .chip.bad{{background:var(--bad);color:var(--badfg)}} .chip.warn{{background:var(--warn);color:var(--warnfg)}} .chip.dim{{color:var(--dim)}}
 a{{color:var(--link)}} .dim{{color:var(--dim);font-weight:400;font-size:13px}}
@@ -386,7 +425,7 @@ footer{{margin-top:24px;color:var(--dim);font-size:12px}}
 <p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
-未测的格子显示"未评测"。每个 App 下面可展开它的<b>功能清单</b>:逐条功能的通过 / 部分 / 不通过 / 测不了。指向私有仓的链接需要登录的组织成员。</p>
+未测的格子显示"未评测"。每个 App 下面可展开它的<b>功能清单</b>:逐条功能的通过 / 部分 / 不通过 / 测不了。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
 {''.join(cards)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>) · hand-added links in <a href="overrides.json">overrides.json</a></footer>
 </main></body></html>

@@ -1,6 +1,6 @@
 {
  "repo": "fuxi-ailabs/HMBot",
- "generated_utc": "2026-10-30T09:05:01.496883+00:00",
+ "generated_utc": "2026-10-30T09:11:02.091138+00:00",
  "releases": [
   {
    "tag": "v1.8.1",
@@ -12,27 +12,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.8.1-macos-arm64.tar.gz",
-     "bytes": 169653733
+     "bytes": 169653733,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-cc-1.8.1-macos-arm64.tar.gz",
+     "downloads": 2,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-cc-1.8.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.8.1-windows-x64.zip",
-     "bytes": 179001182
+     "bytes": 179001182,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-cc-1.8.1-windows-x64.zip",
+     "downloads": 4,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-cc-1.8.1-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.8.1-macos-arm64.tar.gz",
-     "bytes": 170497873
+     "bytes": 170497873,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-codex-1.8.1-macos-arm64.tar.gz",
+     "downloads": 2,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-codex-1.8.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.8.1-windows-x64.zip",
-     "bytes": 179874908
+     "bytes": 179874908,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-codex-1.8.1-windows-x64.zip",
+     "downloads": 3,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-codex-1.8.1-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.8.1-macos-arm64.tar.gz",
-     "bytes": 162636850
+     "bytes": 162636850,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-deveco-1.8.1-macos-arm64.tar.gz",
+     "downloads": 3,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-deveco-1.8.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.8.1-windows-x64.zip",
-     "bytes": 172511592
+     "bytes": 172511592,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-deveco-1.8.1-windows-x64.zip",
+     "downloads": 3,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.1/hmbot-deveco-1.8.1-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "47a57e0e7a141f1e85ecb3fdf51fa1cfa0732e3f",
@@ -114,27 +132,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.8.0-rc.1-macos-arm64.tar.gz",
-     "bytes": 162606059
+     "bytes": 162606059,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-cc-1.8.0-rc.1-macos-arm64.tar.gz",
+     "downloads": 6,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-cc-1.8.0-rc.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.8.0-rc.1-windows-x64.zip",
-     "bytes": 173023836
+     "bytes": 173023836,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-cc-1.8.0-rc.1-windows-x64.zip",
+     "downloads": 4,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-cc-1.8.0-rc.1-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.8.0-rc.1-macos-arm64.tar.gz",
-     "bytes": 163305608
+     "bytes": 163305608,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-codex-1.8.0-rc.1-macos-arm64.tar.gz",
+     "downloads": 4,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-codex-1.8.0-rc.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.8.0-rc.1-windows-x64.zip",
-     "bytes": 173716519
+     "bytes": 173716519,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-codex-1.8.0-rc.1-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-codex-1.8.0-rc.1-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.8.0-rc.1-macos-arm64.tar.gz",
-     "bytes": 143385120
+     "bytes": 143385120,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-deveco-1.8.0-rc.1-macos-arm64.tar.gz",
+     "downloads": 2,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-deveco-1.8.0-rc.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.8.0-rc.1-windows-x64.zip",
-     "bytes": 155704977
+     "bytes": 155704977,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-deveco-1.8.0-rc.1-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.8.0-rc.1/hmbot-deveco-1.8.0-rc.1-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "4c93ea84af8bb4dab1e3127a523c3b5259821ffa",
@@ -232,27 +268,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.7.7-macos-arm64.tar.gz",
-     "bytes": 149832053
+     "bytes": 149832053,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-cc-1.7.7-macos-arm64.tar.gz",
+     "downloads": 3,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-cc-1.7.7-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.7.7-windows-x64.zip",
-     "bytes": 161500367
+     "bytes": 161500367,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-cc-1.7.7-windows-x64.zip",
+     "downloads": 2,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-cc-1.7.7-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.7.7-macos-arm64.tar.gz",
-     "bytes": 162849610
+     "bytes": 162849610,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-codex-1.7.7-macos-arm64.tar.gz",
+     "downloads": 43,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-codex-1.7.7-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.7.7-windows-x64.zip",
-     "bytes": 173031874
+     "bytes": 173031874,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-codex-1.7.7-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-codex-1.7.7-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.7-macos-arm64.tar.gz",
-     "bytes": 143038062
+     "bytes": 143038062,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-deveco-1.7.7-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-deveco-1.7.7-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.7-windows-x64.zip",
-     "bytes": 155241438
+     "bytes": 155241438,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-deveco-1.7.7-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.7/hmbot-deveco-1.7.7-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "e6a7380c5e03153d81d90d4262b355f13fd508c9",
@@ -658,27 +712,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.7.6-macos-arm64.tar.gz",
-     "bytes": 152066080
+     "bytes": 152066080,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-cc-1.7.6-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-cc-1.7.6-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.7.6-windows-x64.zip",
-     "bytes": 165884701
+     "bytes": 165884701,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-cc-1.7.6-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-cc-1.7.6-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.7.6-macos-arm64.tar.gz",
-     "bytes": 165091167
+     "bytes": 165091167,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-codex-1.7.6-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-codex-1.7.6-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.7.6-windows-x64.zip",
-     "bytes": 177416174
+     "bytes": 177416174,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-codex-1.7.6-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-codex-1.7.6-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.6-macos-arm64.tar.gz",
-     "bytes": 145283534
+     "bytes": 145283534,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-deveco-1.7.6-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-deveco-1.7.6-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.6-windows-x64.zip",
-     "bytes": 159625738
+     "bytes": 159625738,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-deveco-1.7.6-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.6/hmbot-deveco-1.7.6-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "320f3917835a446f7f6b2c19f31b53f672a0de11",
@@ -999,27 +1071,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.7.5-macos-arm64.tar.gz",
-     "bytes": 195765295
+     "bytes": 195765295,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-cc-1.7.5-macos-arm64.tar.gz",
+     "downloads": 2,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-cc-1.7.5-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.7.5-windows-x64.zip",
-     "bytes": 182401019
+     "bytes": 182401019,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-cc-1.7.5-windows-x64.zip",
+     "downloads": 2,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-cc-1.7.5-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.7.5-macos-arm64.tar.gz",
-     "bytes": 219128485
+     "bytes": 219128485,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-codex-1.7.5-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-codex-1.7.5-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.7.5-windows-x64.zip",
-     "bytes": 205166250
+     "bytes": 205166250,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-codex-1.7.5-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-codex-1.7.5-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.5-macos-arm64.tar.gz",
-     "bytes": 188931063
+     "bytes": 188931063,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-deveco-1.7.5-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-deveco-1.7.5-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.5-windows-x64.zip",
-     "bytes": 175601409
+     "bytes": 175601409,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-deveco-1.7.5-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.5/hmbot-deveco-1.7.5-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "1ce6b9d5c5cf311e3ba2854b6e35e06f381543d2",
@@ -1327,27 +1417,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.7.4-macos-arm64.tar.gz",
-     "bytes": 195764241
+     "bytes": 195764241,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-cc-1.7.4-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-cc-1.7.4-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.7.4-windows-x64.zip",
-     "bytes": 182397808
+     "bytes": 182397808,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-cc-1.7.4-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-cc-1.7.4-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.7.4-macos-arm64.tar.gz",
-     "bytes": 219123457
+     "bytes": 219123457,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-codex-1.7.4-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-codex-1.7.4-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.7.4-windows-x64.zip",
-     "bytes": 205162690
+     "bytes": 205162690,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-codex-1.7.4-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-codex-1.7.4-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.4-macos-arm64.tar.gz",
-     "bytes": 188935736
+     "bytes": 188935736,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-deveco-1.7.4-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-deveco-1.7.4-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.4-windows-x64.zip",
-     "bytes": 175598576
+     "bytes": 175598576,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-deveco-1.7.4-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.4/hmbot-deveco-1.7.4-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "97525f1ea3f95d7f889c133076afc0db4c84adf9",
@@ -1614,27 +1722,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.7.3-macos-arm64.tar.gz",
-     "bytes": 195746841
+     "bytes": 195746841,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-cc-1.7.3-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-cc-1.7.3-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.7.3-windows-x64.zip",
-     "bytes": 182389647
+     "bytes": 182389647,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-cc-1.7.3-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-cc-1.7.3-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.7.3-macos-arm64.tar.gz",
-     "bytes": 219119964
+     "bytes": 219119964,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-codex-1.7.3-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-codex-1.7.3-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.7.3-windows-x64.zip",
-     "bytes": 205154468
+     "bytes": 205154468,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-codex-1.7.3-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-codex-1.7.3-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.3-macos-arm64.tar.gz",
-     "bytes": 188923286
+     "bytes": 188923286,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-deveco-1.7.3-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-deveco-1.7.3-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.3-windows-x64.zip",
-     "bytes": 175591576
+     "bytes": 175591576,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-deveco-1.7.3-windows-x64.zip",
+     "downloads": 3,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.3/hmbot-deveco-1.7.3-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "22c4fa4069dc9cd4d0d64bdc612c46e7a138e6af",
@@ -1882,27 +2008,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.7.2-macos-arm64.tar.gz",
-     "bytes": 195743651
+     "bytes": 195743651,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-cc-1.7.2-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-cc-1.7.2-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.7.2-windows-x64.zip",
-     "bytes": 182389220
+     "bytes": 182389220,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-cc-1.7.2-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-cc-1.7.2-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.7.2-macos-arm64.tar.gz",
-     "bytes": 219120116
+     "bytes": 219120116,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-codex-1.7.2-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-codex-1.7.2-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.7.2-windows-x64.zip",
-     "bytes": 205154389
+     "bytes": 205154389,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-codex-1.7.2-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-codex-1.7.2-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.2-macos-arm64.tar.gz",
-     "bytes": 188918630
+     "bytes": 188918630,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-deveco-1.7.2-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-deveco-1.7.2-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.2-windows-x64.zip",
-     "bytes": 175590056
+     "bytes": 175590056,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-deveco-1.7.2-windows-x64.zip",
+     "downloads": 3,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/v1.7.2/hmbot-deveco-1.7.2-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "e311f236787ef2fc5f07e927a0e46bc6162832f4",
@@ -2150,27 +2294,45 @@
    "packages": [
     {
      "name": "hmbot-cc-1.7.1-macos-arm64.tar.gz",
-     "bytes": 195742976
+     "bytes": 195742976,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-cc-1.7.1-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-cc-1.7.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-cc-1.7.1-windows-x64.zip",
-     "bytes": 182386076
+     "bytes": 182386076,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-cc-1.7.1-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-cc-1.7.1-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-codex-1.7.1-macos-arm64.tar.gz",
-     "bytes": 219117600
+     "bytes": 219117600,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-codex-1.7.1-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-codex-1.7.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-codex-1.7.1-windows-x64.zip",
-     "bytes": 205151244
+     "bytes": 205151244,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-codex-1.7.1-windows-x64.zip",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-codex-1.7.1-windows-x64.zip.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.1-macos-arm64.tar.gz",
-     "bytes": 188914123
+     "bytes": 188914123,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-deveco-1.7.1-macos-arm64.tar.gz",
+     "downloads": 1,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-deveco-1.7.1-macos-arm64.tar.gz.sha256"
     },
     {
      "name": "hmbot-deveco-1.7.1-windows-x64.zip",
-     "bytes": 175586668
+     "bytes": 175586668,
+     "url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-deveco-1.7.1-windows-x64.zip",
+     "downloads": 3,
+     "sha256_url": "https://github.com/fuxi-ailabs/HMBot/releases/download/candidate-global-install-20261008/hmbot-deveco-1.7.1-windows-x64.zip.sha256"
     }
    ],
    "source_commit": "370216247b8ab1cc62e3ec9684a9bc84be2bb31e",
