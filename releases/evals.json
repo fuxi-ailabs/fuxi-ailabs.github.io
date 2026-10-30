@@ -20,7 +20,7 @@
     "url": "https://migration-artifacts.obs.cn-east-3.myhuaweicloud.com/jetsnack/full-session-20261030T013210Z/jetsnack-complete-session-20261030T013210Z.zip"
    }
   ],
-  "note": "完整会话已归档;功能清单来自 spec,逐条尚未上机评测",
+  "note": "完整会话已归档;四个比例尚未评测",
   "active_seconds": 206719,
   "tokens_breakdown": {
    "input": 12080797,
@@ -32,6 +32,8 @@
   },
   "hmbot_version": "1.8.0-rc.1",
   "run_id": "47f8c2ff-b1d4-4777-8448-c9f85a84f71f",
+  "checklist_file": "checklists/v1.8.0-rc.1/Jetsnack.md",
+  "checklist_source": "清单取自 spec/baseline/feature-index.md,结果待人工填写",
   "checklist": [
    {
     "id": "F001",
@@ -75,7 +77,6 @@
     "result": "untested",
     "note": ""
    }
-  ],
-  "checklist_source": "a2h-spec feature-index.md(spec 阶段从安卓源码推导,7 个 feature)"
+  ]
  }
 ]

@@ -11,12 +11,14 @@ A row = one app migrated with one HMBot release, scored on the six things the le
 
 Values are ratios in [0,1] (pass "26/31" or "0.84" or "84%"); anything not measured stays null and renders as 未评测.
 
-Each row can carry a feature checklist (功能清单): one line per feature with its verdict. Sources:
-  --checklist FILE    our JSON list [{id, feature, result, note}], an a2h-replay-bench functional-*.json (items id →
-                      {result, note}; feature names from --checklist-names FUNCTIONAL.md), or a markdown table
-                      whose first columns are | ID | 功能 | 结果 | 说明 |  (结果: 通过/部分/不通过/测不了/未评测 or pass/partial/fail/untestable/untested)
-  --feature-index FILE  an a2h-spec feature-index.md (## 功能清单 table: | ID | 功能 | ...) → every feature listed as 未评测
-When the checklist has verdicts and --functional-completeness is not given, functional_completeness = 通过 ÷ 全部 (测不了计失败).
+Each row's 功能清单 column is something a person uploads: a link, or a table file.
+  --checklist-url URL   link to the checklist kept elsewhere (a shared doc, a repo file, ...)
+  --checklist FILE      upload a table: it is copied to releases/checklists/<tag>/<app>.<ext> and linked from the page.
+                        Recognised formats are also parsed so the page can show counts and an inline preview:
+                        markdown table | ID | 功能 | 结果 | 说明 |  (结果: 通过/部分/不通过/测不了/未评测 or pass/partial/fail/untestable/untested),
+                        JSON list [{id, feature, result, note}], a2h-replay-bench functional-*.json (names via --checklist-names FUNCTIONAL.md).
+                        Other files (xlsx, pdf, html, ...) are uploaded and linked as-is.
+When a parsed checklist has verdicts and --functional-completeness is not given, functional_completeness = 通过 ÷ 已评测 (测不了计失败).
 Sources that can fill fields automatically:
   --session-dir DIR   output dir of hmbot-session-archive (MANIFEST.json stats → duration, tokens, model/host, archive link)
   --gt-eval FILE      gt-eval Eval Result (yaml/json): executed_kits[].summary passed/total → functional_completeness
@@ -31,10 +33,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+SITE = Path(__file__).resolve().parent.parent
 
 
 def ratio(s):
@@ -168,7 +174,7 @@ def load_checklist(path, names_path=None):
     return items
 
 
-def load_feature_index(path):
+def _unused_load_feature_index(path):
     text = Path(path).expanduser().read_text()
     sec = text.split("## 功能清单", 1)[1] if "## 功能清单" in text else text
     sec = sec.split("\n## ", 1)[0]
@@ -184,10 +190,10 @@ def main():
     ap.add_argument("--project", help="with --session-dir: project dir, to recompute time/tokens when the archive has no stats")
     ap.add_argument("--gt-eval")
     ap.add_argument("--functional")
-    ap.add_argument("--checklist", help="feature checklist with verdicts (JSON / bench functional json / markdown table)")
+    ap.add_argument("--checklist", help="upload a checklist table file (markdown table / JSON / bench functional json / any file)")
+    ap.add_argument("--checklist-url", help="link to a checklist kept elsewhere")
     ap.add_argument("--checklist-names", help="FUNCTIONAL.md giving feature text for a bench functional json")
-    ap.add_argument("--feature-index", help="a2h-spec feature-index.md: list its features as 未评测")
-    ap.add_argument("--checklist-source", help="where the checklist comes from (shown on the page)")
+    ap.add_argument("--checklist-source", help="who/where the checklist comes from (shown under the link)")
     ap.add_argument("--functional-completeness")
     ap.add_argument("--usability")
     ap.add_argument("--accuracy")
@@ -220,12 +226,22 @@ def main():
         from_gt_eval(a.gt_eval, row)
     if a.functional:
         from_functional(a.functional, row)
-    if a.feature_index:
-        row["checklist"] = load_feature_index(a.feature_index)
-        row["checklist_source"] = a.checklist_source or f"a2h-spec feature-index ({Path(a.feature_index).expanduser().name})"
+    if a.checklist_url:
+        row["checklist_url"] = a.checklist_url
+        row["checklist_source"] = a.checklist_source or row.get("checklist_source")
     if a.checklist:
-        row["checklist"] = load_checklist(a.checklist, a.checklist_names)
-        row["checklist_source"] = a.checklist_source or Path(a.checklist).expanduser().name
+        src = Path(a.checklist).expanduser()
+        dest_dir = SITE / "releases" / "checklists" / a.tag
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest = dest_dir / (re.sub(r"[^\w.-]+", "_", a.app) + src.suffix.lower())
+        shutil.copyfile(src, dest)
+        row["checklist_file"] = str(dest.relative_to(SITE / "releases"))
+        row["checklist_source"] = a.checklist_source or src.name
+        try:
+            row["checklist"] = load_checklist(src, a.checklist_names)
+        except SystemExit:
+            row.pop("checklist", None)      # not a table we can parse: linked as a plain file
+        print(f"uploaded checklist file -> releases/{row['checklist_file']}")
     cl = row.get("checklist") or []
     if cl and any(i["result"] != "untested" for i in cl) and a.functional_completeness is None:
         scored = [i for i in cl if i["result"] != "untested"]

@@ -94,6 +94,29 @@ def classify(tag, packages):
 
 
 # ── rendering ─────────────────────────────────────────────────────────────────
+BASE_CSS = """:root{color-scheme:light dark;--fg:#1a1a1a;--bg:#fff;--dim:#6b6b6b;--line:#e4e4e4;--card:#fafafa;--link:#0b57d0;--ok:#e6f4ea;--okfg:#137333;--bad:#fce8e6;--badfg:#c5221f;--warn:#fef7e0;--warnfg:#b06000;--chip:#eee}
+@media(prefers-color-scheme:dark){:root{--fg:#e6e6e6;--bg:#121212;--dim:#9a9a9a;--line:#2b2b2b;--card:#1a1a1a;--link:#8ab4f8;--ok:#1e3a2a;--okfg:#81c995;--bad:#3c1f1d;--badfg:#f28b82;--warn:#3a2e14;--warnfg:#fdd663;--chip:#2a2a2a}}
+body{margin:0;padding:32px 24px;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg)}
+main{max-width:1000px;margin:0 auto} h1{font-size:22px;margin:0 0 6px} .lead{color:var(--dim);margin:0 0 24px;max-width:80ch}
+.card{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:16px 18px;margin:0 0 16px}
+.card h2{font-size:17px;margin:0 0 2px} .card h2 a{color:var(--fg);text-decoration:none} .card h2 a:hover{text-decoration:underline}
+.meta{color:var(--dim);font-size:13px;margin-bottom:10px} code{font-size:12px}
+table.pkgs{border-collapse:collapse;margin:0 0 12px;font-size:13px} .pkgs th,.pkgs td{text-align:left;padding:4px 14px 4px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.pkgs thead th{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em} .pkgs tbody th{font-weight:600;white-space:nowrap} .pkgs a{word-break:break-all} .pkgs a.dim{color:var(--dim)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0} .chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;background:var(--chip);color:var(--fg);text-decoration:none}
+.chip.ok{background:var(--ok);color:var(--okfg)} .chip.bad{background:var(--bad);color:var(--badfg)} .chip.warn{background:var(--warn);color:var(--warnfg)} .chip.dim{color:var(--dim)}
+a{color:var(--link)} .dim{color:var(--dim);font-weight:400;font-size:13px}
+tr.bad td:first-child{color:var(--badfg)} details{margin-top:8px} summary{cursor:pointer;color:var(--dim)} details ul{margin:6px 0 0;padding-left:18px} li{margin:2px 0}
+.notes{margin:8px 0 0;color:var(--dim)}
+table.evals{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:13px} .evals th,.evals td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.evals th{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}
+td.clcell{min-width:220px} details.cl summary{cursor:pointer;white-space:nowrap} details.cl[open] summary{color:var(--dim);font-size:12px}
+table.checklist{border-collapse:collapse;width:100%;min-width:420px;margin:4px 0 0;font-size:12.5px} .checklist th,.checklist td{text-align:left;padding:4px 8px;border-top:1px solid var(--line);vertical-align:top}
+.checklist th{color:var(--dim);font-weight:600;font-size:11px} td.cid{white-space:nowrap;color:var(--dim)} td.res{white-space:nowrap} td.res.ok{color:var(--okfg)} td.res.bad{color:var(--badfg)} td.res.warn{color:var(--warnfg)} td.res.dim{color:var(--dim)} td.note{color:var(--dim)} .evals td.app{font-weight:600} .sub{font-weight:400;color:var(--dim);font-size:12px} .na{color:var(--dim)} td.ev{font-size:12px;max-width:260px}
+footer{margin-top:24px;color:var(--dim);font-size:12px}
+"""
+
+
 def chip(text, kind="ok"):
     return f'<span class="chip {kind}">{html.escape(text)}</span>'
 
@@ -157,23 +180,63 @@ RESULT_LABEL = {"pass": ("✓ 通过", "ok"), "partial": ("◐ 部分", "warn"),
                 "untestable": ("— 测不了", "dim"), "untested": ("未评测", "dim")}
 
 
-def checklist_block(r):
-    cl = r.get("checklist") or []
-    if not cl:
-        return "<span class=dim>未提供</span>"
+def checklist_rows_html(cl):
+    return "".join(f"<tr><td class=cid>{html.escape(str(i.get('id') or ''))}</td><td>{html.escape(i.get('feature') or '')}</td>"
+                   f"<td class=\"res {RESULT_LABEL.get(i.get('result', 'untested'), RESULT_LABEL['untested'])[1]}\">{RESULT_LABEL.get(i.get('result', 'untested'), RESULT_LABEL['untested'])[0]}</td>"
+                   f"<td class=note>{html.escape(i.get('note') or '')}</td></tr>" for i in cl)
+
+
+def checklist_counts(cl):
     counts = {}
     for i in cl:
         counts[i.get("result", "untested")] = counts.get(i.get("result", "untested"), 0) + 1
-    summary = " · ".join(f"{RESULT_LABEL[k][0]} {counts[k]}" for k in ("pass", "partial", "fail", "untestable", "untested") if counts.get(k))
-    src = f'<div class=sub>来源:{html.escape(r["checklist_source"])}</div>' if r.get("checklist_source") else ""
-    rows = "".join(f"<tr><td class=cid>{html.escape(str(i.get('id') or ''))}</td><td>{html.escape(i.get('feature') or '')}</td>"
-                   f"<td class=\"res {RESULT_LABEL.get(i.get('result', 'untested'), RESULT_LABEL['untested'])[1]}\">{RESULT_LABEL.get(i.get('result', 'untested'), RESULT_LABEL['untested'])[0]}</td>"
-                   f"<td class=note>{html.escape(i.get('note') or '')}</td></tr>" for i in cl)
-    return (f"<details class=cl><summary>{len(cl)} 项 · {summary}</summary>"
-            f"<table class=checklist><thead><tr><th>ID</th><th>功能</th><th>结果</th><th>说明</th></tr></thead><tbody>{rows}</tbody></table></details>{src}")
+    return " · ".join(f"{RESULT_LABEL[k][0]} {counts[k]}" for k in ("pass", "partial", "fail", "untestable", "untested") if counts.get(k))
 
 
-def evals_table(rows):
+def checklist_page(r):
+    """Standalone page for an uploaded checklist table: releases/checklists/<tag>/<app>.html."""
+    cl = r.get("checklist") or []
+    raw = f'<p class=dim>原文件:<a href="{html.escape(Path(r["checklist_file"]).name)}">{html.escape(Path(r["checklist_file"]).name)}</a>' \
+          + (f" · 来源:{html.escape(r['checklist_source'])}" if r.get("checklist_source") else "") + "</p>"
+    return f"""<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{html.escape(r['app'])} 功能清单 · {html.escape(r['tag'])}</title>
+<style>{BASE_CSS}</style></head><body><main>
+<h1>{html.escape(r['app'])} 功能清单 <span class=dim>{html.escape(r['tag'])}</span></h1>
+<p class=lead>{len(cl)} 项 · {checklist_counts(cl)}</p>{raw}
+<table class=checklist><thead><tr><th>ID</th><th>功能</th><th>结果</th><th>说明</th></tr></thead><tbody>{checklist_rows_html(cl)}</tbody></table>
+<p class=dim><a href="../../">← 返回发版台账</a></p></main></body></html>
+"""
+
+
+def checklist_block(r, out_dir):
+    """The 功能清单 cell: a link to what was uploaded (table page / raw file / external URL), counts, inline preview."""
+    cl = r.get("checklist") or []
+    link = None
+    if r.get("checklist_file"):
+        f = Path(r["checklist_file"])
+        if cl:
+            page = f.with_suffix(".html")
+            (out_dir / page).parent.mkdir(parents=True, exist_ok=True)
+            (out_dir / page).write_text(checklist_page(r))
+            link = (str(page), "查看清单")
+        else:
+            link = (str(f), f.name)
+    elif r.get("checklist_url"):
+        link = (r["checklist_url"], "查看清单")
+    if not link and not cl:
+        return "<span class=dim>未上传</span>"
+    parts = []
+    if link:
+        parts.append(f'<a href="{html.escape(link[0])}">{html.escape(link[1])}</a>')
+    if cl:
+        parts.append(f"<details class=cl><summary>{len(cl)} 项 · {checklist_counts(cl)}</summary>"
+                     f"<table class=checklist><thead><tr><th>ID</th><th>功能</th><th>结果</th><th>说明</th></tr></thead><tbody>{checklist_rows_html(cl)}</tbody></table></details>")
+    if r.get("checklist_source"):
+        parts.append(f'<div class=sub>{html.escape(r["checklist_source"])}</div>')
+    return "".join(parts)
+
+def evals_table(rows, out_dir):
     if not rows:
         return "<p class=na>这个版本还没有迁移评测记录。</p>"
     out = []
@@ -189,12 +252,12 @@ def evals_table(rows):
                    f"<td title=\"active {fmt_dur(r.get('active_seconds'))}\">{fmt_dur(r.get('duration_seconds'))}</td>"
                    f"<td title=\"{html.escape(tok_tip)}\">{fmt_tok(r.get('tokens'))}</td>"
                    f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td>"
-                   f"<td class=clcell>{checklist_block(r)}</td></tr>")
+                   f"<td class=clcell>{checklist_block(r, out_dir)}</td></tr>")
     return ("<table class=evals><thead><tr><th>App</th><th>功能完备度</th><th>可用性</th><th>准确率</th><th>代码完备度</th>"
             "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
 
 
-def render(entries, repo, evals):
+def render(entries, repo, evals, out_dir):
     cards = []
     for e in entries:
         day = (e.get("published_at") or "")[:10]
@@ -206,39 +269,18 @@ def render(entries, repo, evals):
                 + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
                 + (f" · a2h v{html.escape(e['a2h_version'])}" if e.get("a2h_version") else "")
                 + (f" · {len(e['packages'])} product archives" if e.get("packages") else "") + "</div>")
-        body = packages_block(e) + evals_table(evals.get(tag, []))
+        body = packages_block(e) + evals_table(evals.get(tag, []), out_dir)
         cards.append(f"<section class=card id=\"{html.escape(tag)}\">{head}{body}</section>")
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HMBot release test reports</title>
-<style>
-:root{{color-scheme:light dark;--fg:#1a1a1a;--bg:#fff;--dim:#6b6b6b;--line:#e4e4e4;--card:#fafafa;--link:#0b57d0;--ok:#e6f4ea;--okfg:#137333;--bad:#fce8e6;--badfg:#c5221f;--warn:#fef7e0;--warnfg:#b06000;--chip:#eee}}
-@media(prefers-color-scheme:dark){{:root{{--fg:#e6e6e6;--bg:#121212;--dim:#9a9a9a;--line:#2b2b2b;--card:#1a1a1a;--link:#8ab4f8;--ok:#1e3a2a;--okfg:#81c995;--bad:#3c1f1d;--badfg:#f28b82;--warn:#3a2e14;--warnfg:#fdd663;--chip:#2a2a2a}}}}
-body{{margin:0;padding:32px 24px;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg)}}
-main{{max-width:1000px;margin:0 auto}} h1{{font-size:22px;margin:0 0 6px}} .lead{{color:var(--dim);margin:0 0 24px;max-width:80ch}}
-.card{{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:16px 18px;margin:0 0 16px}}
-.card h2{{font-size:17px;margin:0 0 2px}} .card h2 a{{color:var(--fg);text-decoration:none}} .card h2 a:hover{{text-decoration:underline}}
-.meta{{color:var(--dim);font-size:13px;margin-bottom:10px}} code{{font-size:12px}}
-table.pkgs{{border-collapse:collapse;margin:0 0 12px;font-size:13px}} .pkgs th,.pkgs td{{text-align:left;padding:4px 14px 4px 0;border-bottom:1px solid var(--line);vertical-align:top}}
-.pkgs thead th{{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}} .pkgs tbody th{{font-weight:600;white-space:nowrap}} .pkgs a{{word-break:break-all}} .pkgs a.dim{{color:var(--dim)}}
-.chips{{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}} .chip{{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;background:var(--chip);color:var(--fg);text-decoration:none}}
-.chip.ok{{background:var(--ok);color:var(--okfg)}} .chip.bad{{background:var(--bad);color:var(--badfg)}} .chip.warn{{background:var(--warn);color:var(--warnfg)}} .chip.dim{{color:var(--dim)}}
-a{{color:var(--link)}} .dim{{color:var(--dim);font-weight:400;font-size:13px}}
-tr.bad td:first-child{{color:var(--badfg)}} details{{margin-top:8px}} summary{{cursor:pointer;color:var(--dim)}} details ul{{margin:6px 0 0;padding-left:18px}} li{{margin:2px 0}}
-.notes{{margin:8px 0 0;color:var(--dim)}}
-table.evals{{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:13px}} .evals th,.evals td{{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}}
-.evals th{{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}}
-td.clcell{{min-width:220px}} details.cl summary{{cursor:pointer;white-space:nowrap}} details.cl[open] summary{{color:var(--dim);font-size:12px}}
-table.checklist{{border-collapse:collapse;width:100%;min-width:420px;margin:4px 0 0;font-size:12.5px}} .checklist th,.checklist td{{text-align:left;padding:4px 8px;border-top:1px solid var(--line);vertical-align:top}}
-.checklist th{{color:var(--dim);font-weight:600;font-size:11px}} td.cid{{white-space:nowrap;color:var(--dim)}} td.res{{white-space:nowrap}} td.res.ok{{color:var(--okfg)}} td.res.bad{{color:var(--badfg)}} td.res.warn{{color:var(--warnfg)}} td.res.dim{{color:var(--dim)}} td.note{{color:var(--dim)}} .evals td.app{{font-weight:600}} .sub{{font-weight:400;color:var(--dim);font-size:12px}} .na{{color:var(--dim)}} td.ev{{font-size:12px;max-width:260px}}
-footer{{margin-top:24px;color:var(--dim);font-size:12px}}
-</style></head><body><main>
+<style>{BASE_CSS}</style></head><body><main>
 <h1>HMBot release test reports</h1>
 <p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
-未测的格子显示"未评测"。每个 App 下面可展开它的<b>功能清单</b>:逐条功能的通过 / 部分 / 不通过 / 测不了。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
+未测的格子显示"未评测"。<b>功能清单</b>一列是人工上传的清单:链接或表格,表格可在页内展开预览。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
 {''.join(cards)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>)</footer>
 </main></body></html>
@@ -267,7 +309,7 @@ def main():
     evals = {}
     for r in (json.loads(ev_file.read_text()) if ev_file.is_file() else []):
         evals.setdefault(r["tag"], []).append(r)
-    (out_dir / "index.html").write_text(render(entries, args.repo, evals))
+    (out_dir / "index.html").write_text(render(entries, args.repo, evals, out_dir))
     log(f"wrote {out_dir / 'releases.json'} and index.html ({len(entries)} releases)")
 
 
