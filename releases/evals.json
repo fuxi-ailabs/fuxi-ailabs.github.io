@@ -78,6 +78,11 @@
     "result": "untested",
     "note": ""
    }
+  ],
+  "caps": [
+   "core",
+   "ota",
+   "telemetry"
   ]
  }
 ]

@@ -18,6 +18,13 @@ Each row's 功能清单 column is something a person uploads: a link, or a table
                         markdown table | ID | 功能 | 结果 | 说明 |  (结果: 通过/部分/不通过/测不了/未评测 or pass/partial/fail/untestable/untested),
                         JSON list [{id, feature, result, note}], a2h-replay-bench functional-*.json (names via --checklist-names FUNCTIONAL.md).
                         Other files (xlsx, pdf, html, ...) are uploaded and linked as-is.
+能力组合 (which HMBot capability modules were on for this migration) is a list of module keys:
+  core (0-1 迁移 Core), ota, telemetry (数据上报), memory, ecat, dt, visual, hitest, 1to1 (1:1 复制), arch (架构迁移).
+  --cap KEY (repeatable) adds modules by hand; with --project the detectable ones are filled in automatically:
+  core always; 1to1 / arch from .migbot/plugin/install.json profile; ota when the project carries .migbot/release.json
+  (the a2h-init update check); telemetry when .migbot/config.json telemetry_consent is granted; memory when
+  .claude/a2h-bench/ (replay-bench recall) or an mbm plugin is installed. ecat / dt / visual / hitest are hmbot CLI
+  capabilities and are only recorded when you pass them. --no-auto-caps skips the detection.
 The 评估方法 column (right of 功能清单) is uploaded the same way:
   --method URL|FILE|TEXT  a link, a file (copied to releases/methods/<tag>/<app>.<ext> and linked), or a short text shown in the cell.
 When a parsed checklist has verdicts and --functional-completeness is not given, functional_completeness = 通过 ÷ 已评测 (测不了计失败).
@@ -128,6 +135,40 @@ def from_functional(path, row):
     return row
 
 
+CAPS = ("core", "ota", "telemetry", "memory", "ecat", "dt", "visual", "hitest", "1to1", "arch")
+
+
+def detect_caps(project):
+    """Capability modules visible in the migrated project tree (see module docstring)."""
+    p = Path(project).expanduser()
+    caps = {"core"}
+    try:
+        inst = json.loads((p / ".migbot" / "plugin" / "install.json").read_text())
+        prof = inst.get("profile") or ""
+        if prof == "1to1":
+            caps.add("1to1")
+        elif prof in ("arch", "architecture"):
+            caps.add("arch")
+    except (OSError, ValueError):
+        pass
+    if (p / ".migbot" / "release.json").is_file():
+        caps.add("ota")
+    try:
+        cfg = json.loads((p / ".migbot" / "config.json").read_text())
+        if cfg.get("telemetry_consent") == "granted":
+            caps.add("telemetry")
+    except (OSError, ValueError):
+        pass
+    if (p / ".claude" / "a2h-bench").is_dir() or any(x.is_dir() and "mbm" in x.name for x in (p / ".claude" / "plugins").glob("*") if (p / ".claude" / "plugins").is_dir()):
+        caps.add("memory")
+    try:
+        if "mbm" in (p / ".claude" / "settings.json").read_text():
+            caps.add("memory")
+    except OSError:
+        pass
+    return caps
+
+
 RESULT_MAP = {"通过": "pass", "pass": "pass", "passed": "pass", "present": "pass", "✓": "pass", "covered-correct": "pass",
               "部分": "partial", "partial": "partial", "◐": "partial", "degraded": "partial", "covered-wrong": "partial",
               "不通过": "fail", "fail": "fail", "failed": "fail", "missing": "fail", "✗": "fail", "absent": "fail",
@@ -196,6 +237,8 @@ def main():
     ap.add_argument("--checklist", help="upload a checklist table file (markdown table / JSON / bench functional json / any file)")
     ap.add_argument("--checklist-url", help="link to a checklist kept elsewhere")
     ap.add_argument("--method", help="评估方法: a URL, a file to upload, or a short text")
+    ap.add_argument("--cap", action="append", default=[], choices=sorted(CAPS), help="capability module on for this migration (repeatable)")
+    ap.add_argument("--no-auto-caps", action="store_true", help="do not detect modules from --project")
     ap.add_argument("--migbot-session-id", help="override / supply .migbot config.json migbot_session_id (normally read from the archive MANIFEST)")
     ap.add_argument("--checklist-names", help="FUNCTIONAL.md giving feature text for a bench functional json")
     ap.add_argument("--checklist-source", help="who/where the checklist comes from (shown under the link)")
@@ -250,6 +293,16 @@ def main():
         print(f"uploaded checklist file -> releases/{row['checklist_file']}")
     if a.migbot_session_id:
         row["migbot_session_id"] = a.migbot_session_id
+    caps = set(a.cap)
+    if a.project and not a.no_auto_caps:
+        caps |= detect_caps(a.project)
+    elif not a.no_auto_caps:
+        caps.add("core")
+        if (a.strategy or "") == "1to1":
+            caps.add("1to1")
+        elif (a.strategy or "") in ("arch", "architecture"):
+            caps.add("arch")
+    row["caps"] = [c for c in CAPS if c in caps]
     if a.method:
         if re.match(r"https?://", a.method):
             row["method_url"] = a.method
@@ -285,6 +338,7 @@ def main():
     f.write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n")
     if cl:
         print(f"checklist: {len(cl)} items from {row.get('checklist_source')}")
+    print("caps: " + " ".join(row["caps"]))
     print(f"recorded {a.tag} {a.app}: " + ", ".join(f"{k}={row[k]}" for k in ("functional_completeness", "usability", "accuracy", "code_completeness", "duration_seconds", "tokens")))
     print("now rebuild: python3 tools/build_releases.py && git add releases && git commit -m 'evals: ...' && git push")
 

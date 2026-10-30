@@ -39,6 +39,8 @@ python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist-url https://..
 python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist checklist.md --checklist-source "张三 2026-11-01 真机评测"
 ```
 
+能力组合一列记录这次迁移开了哪些能力模块(core / ota / telemetry / memory / ecat / dt / visual / hitest / 1to1 / arch)。给了 `--project` 时自动探测 core、1to1 / arch(安装 profile)、ota(`.migbot/release.json`)、telemetry(`telemetry_consent`)、memory(`.claude/a2h-bench/` 或 mbm 插件);ecat / dt / visual / hitest 是 hmbot CLI 的能力,用 `--cap ecat --cap visual` 手工补。页首有十个模块的职责 / 价值说明。
+
 评估方法一列(功能清单右边)同样人工上传:`--method https://...` 链接、`--method 方法.md` 文件(复制到 `releases/methods/<tag>/`)、或 `--method "真机逐项走查"` 一句话。
 
 结果列写 通过 / 部分 / 不通过 / 测不了 / 未评测。解析出的清单有结论而没传 `--functional-completeness` 时,功能完备度 = 通过数 ÷ 已评测数(测不了计失败)。

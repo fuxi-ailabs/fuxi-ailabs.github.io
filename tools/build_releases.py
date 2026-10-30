@@ -110,7 +110,10 @@ tr.bad td:first-child{color:var(--badfg)} details{margin-top:8px} summary{cursor
 .notes{margin:8px 0 0;color:var(--dim)}
 table.evals{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:13px} .evals th,.evals td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .evals th{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}
-td.clcell,td.method{white-space:nowrap} td.sid code{font-size:11px;word-break:break-all} details.cl summary{cursor:pointer;white-space:nowrap} details.cl[open] summary{color:var(--dim);font-size:12px}
+td.clcell,td.method{white-space:nowrap}
+.caps{display:flex;flex-wrap:wrap;gap:3px;max-width:260px} .cap{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;white-space:nowrap;border:1px solid var(--line)}
+.cap.on{background:var(--ok);color:var(--okfg);border-color:transparent} .cap.off{color:var(--dim);opacity:.55}
+details.legend{margin:-12px 0 20px;color:var(--dim);font-size:13px} details.legend summary{cursor:pointer} details.legend table{max-width:80ch;margin-top:8px;color:var(--fg)} td.sid code{font-size:11px;word-break:break-all} details.cl summary{cursor:pointer;white-space:nowrap} details.cl[open] summary{color:var(--dim);font-size:12px}
 table.checklist{border-collapse:collapse;width:100%;min-width:420px;margin:4px 0 0;font-size:12.5px} .checklist th,.checklist td{text-align:left;padding:4px 8px;border-top:1px solid var(--line);vertical-align:top}
 .checklist th{color:var(--dim);font-weight:600;font-size:11px} td.cid{white-space:nowrap;color:var(--dim)} td.res{white-space:nowrap} td.res.ok{color:var(--okfg)} td.res.bad{color:var(--badfg)} td.res.warn{color:var(--warnfg)} td.res.dim{color:var(--dim)} td.note{color:var(--dim)} .evals td.app{font-weight:600} .sub{font-weight:400;color:var(--dim);font-size:12px} .na{color:var(--dim)} td.ev{font-size:12px;max-width:260px}
 footer{margin-top:24px;color:var(--dim);font-size:12px}
@@ -228,6 +231,39 @@ def checklist_block(r, out_dir):
         return "<span class=dim>未上传</span>"
     return f'<a href="{html.escape(link[0])}">{html.escape(link[1])}</a>'
 
+CAP_INFO = [   # key, label, 核心职责, 关键价值
+    ("core", "0-1 迁移 Core", "从零完成 APP 迁移,规划、生成、编译、修复", "端到端自动化迁移"),
+    ("ota", "OTA", "迁移工具、Skill、规则与能力持续更新", "持续演进"),
+    ("telemetry", "数据上报", "采集执行轨迹、质量、成本和问题数据", "可观测、可度量"),
+    ("memory", "Memory", "沉淀和召回迁移经验、错误修复模式", "越用越好"),
+    ("ecat", "ECAT", "熵减驱动的验证、问题发现与迭代修复", "迁移质量可信"),
+    ("dt", "DT", "开发测试与问题闭环", "提升交付质量"),
+    ("visual", "Visual", "页面视觉还原、截图对比与视觉修复", "UI 一致性"),
+    ("hitest", "HiTest", "自动化测试及功能验证", "功能正确性"),
+    ("1to1", "1:1 复制", "保持原 APP 功能、交互及界面一致", "高保真迁移"),
+    ("arch", "架构迁移", "Android 架构分析、鸿蒙架构映射与重构", "架构适配与可维护性"),
+]
+CAP_BY_KEY = {c[0]: c for c in CAP_INFO}
+
+
+def caps_block(r):
+    """能力组合: one chip per module that was on; the others listed dim so the combination is visible at a glance."""
+    on = set(r.get("caps") or [])
+    if not on:
+        return "<span class=dim>未记录</span>"
+    chips = []
+    for key, label, duty, value in CAP_INFO:
+        cls = "cap on" if key in on else "cap off"
+        chips.append(f'<span class="{cls}" title="{html.escape(duty)} → {html.escape(value)}">{html.escape(label)}</span>')
+    return f'<div class=caps>{"".join(chips)}</div>'
+
+
+def caps_legend():
+    rows = "".join(f"<tr><td>{html.escape(l)}</td><td>{html.escape(d)}</td><td>{html.escape(v)}</td></tr>" for _, l, d, v in CAP_INFO)
+    return (f"<details class=legend><summary>能力模块说明(每条评测的「能力组合」列标出这次迁移开了哪些)</summary>"
+            f"<table class=checklist><thead><tr><th>能力模块</th><th>核心职责</th><th>关键价值</th></tr></thead><tbody>{rows}</tbody></table></details>")
+
+
 def method_block(r):
     """The 评估方法 cell: link to an uploaded file / URL, or short text."""
     if r.get("method_file"):
@@ -249,7 +285,7 @@ def evals_table(rows, out_dir):
         tip = r.get("functional_basis") or ""
         tok = r.get("tokens_breakdown") or {}
         tok_tip = (f"input {tok.get('input', 0):,} · cache read {tok.get('cache_read', 0):,} · cache write {tok.get('cache_creation', 0):,} · output {tok.get('output', 0):,}") if tok else ""
-        out.append(f"<tr><td class=app>{html.escape(r['app'])}<div class=sub>{html.escape(who)}</div></td>"
+        out.append(f"<tr><td class=app>{html.escape(r['app'])}<div class=sub>{html.escape(who)}</div></td><td class=capcell>{caps_block(r)}</td>"
                    f"<td title=\"{html.escape(tip)}\">{pct(r.get('functional_completeness'))}</td><td>{pct(r.get('usability'))}</td>"
                    f"<td>{pct(r.get('accuracy'))}</td><td>{pct(r.get('code_completeness'))}</td>"
                    f"<td title=\"active {fmt_dur(r.get('active_seconds'))}\">{fmt_dur(r.get('duration_seconds'))}</td>"
@@ -257,7 +293,7 @@ def evals_table(rows, out_dir):
                    f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td>"
                    f"<td class=clcell>{checklist_block(r, out_dir)}</td><td class=method>{method_block(r)}</td>"
                    f"<td class=sid title=\"run_id {html.escape(r.get('run_id') or '')}\">{('<code>' + html.escape(r['migbot_session_id']) + '</code>') if r.get('migbot_session_id') else '<span class=dim>—</span>'}</td></tr>")
-    return ("<table class=evals><thead><tr><th>App</th><th>功能完备度</th><th>可用性</th><th>准确率</th><th>代码完备度</th>"
+    return ("<table class=evals><thead><tr><th>App</th><th>能力组合</th><th>功能完备度</th><th>可用性</th><th>准确率</th><th>代码完备度</th>"
             "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th><th>评估方法</th><th>migbot_session_id</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
 
 
@@ -284,7 +320,8 @@ def render(entries, repo, evals, out_dir):
 <p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
-未测的格子显示"未评测"。<b>功能清单</b>和<b>评估方法</b>两列是人工上传的:链接、文件或一句话。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
+未测的格子显示"未评测"。<b>能力组合</b>标出这次迁移开了哪些能力模块(亮的开了,灰的没开)。<b>功能清单</b>和<b>评估方法</b>两列是人工上传的:链接、文件或一句话。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
+{caps_legend()}
 {''.join(cards)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>)</footer>
 </main></body></html>
