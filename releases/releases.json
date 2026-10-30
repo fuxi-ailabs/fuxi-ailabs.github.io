@@ -1,6 +1,6 @@
 {
  "repo": "fuxi-ailabs/HMBot",
- "generated_utc": "2026-10-30T08:59:05.951444+00:00",
+ "generated_utc": "2026-10-30T09:02:43.511443+00:00",
  "releases": [
   {
    "tag": "v1.8.1",
@@ -8,7 +8,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.8.1",
    "published_at": "2026-10-29T09:38:12Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "正式版",
    "packages": [
     {
      "name": "hmbot-cc-1.8.1-macos-arm64.tar.gz",
@@ -110,7 +110,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.8.0-rc.1",
    "published_at": "2026-10-27T03:48:50Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "候选版",
    "packages": [
     {
      "name": "hmbot-cc-1.8.0-rc.1-macos-arm64.tar.gz",
@@ -228,7 +228,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.7.7",
    "published_at": "2026-10-15T06:55:13Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "正式版",
    "packages": [
     {
      "name": "hmbot-cc-1.7.7-macos-arm64.tar.gz",
@@ -636,7 +636,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/official-1.7.0-fixtures",
    "published_at": "2026-10-15T02:56:24Z",
    "prerelease": true,
-   "kind": "inputs",
+   "kind": "构建输入",
    "packages": [],
    "source_commit": null,
    "a2h_version": null,
@@ -654,7 +654,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.7.6",
    "published_at": "2026-10-13T02:09:47Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "正式版",
    "packages": [
     {
      "name": "hmbot-cc-1.7.6-macos-arm64.tar.gz",
@@ -995,7 +995,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.7.5",
    "published_at": "2026-10-10T08:16:27Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "正式版",
    "packages": [
     {
      "name": "hmbot-cc-1.7.5-macos-arm64.tar.gz",
@@ -1323,7 +1323,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.7.4",
    "published_at": "2026-10-09T16:32:51Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "正式版",
    "packages": [
     {
      "name": "hmbot-cc-1.7.4-macos-arm64.tar.gz",
@@ -1610,7 +1610,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.7.3",
    "published_at": "2026-10-09T05:18:53Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "正式版",
    "packages": [
     {
      "name": "hmbot-cc-1.7.3-macos-arm64.tar.gz",
@@ -1878,7 +1878,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/v1.7.2",
    "published_at": "2026-10-09T03:23:24Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "正式版",
    "packages": [
     {
      "name": "hmbot-cc-1.7.2-macos-arm64.tar.gz",
@@ -2146,7 +2146,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/candidate-global-install-20261008",
    "published_at": "2026-10-08T12:39:48Z",
    "prerelease": true,
-   "kind": "product",
+   "kind": "预览版",
    "packages": [
     {
      "name": "hmbot-cc-1.7.1-macos-arm64.tar.gz",
@@ -2414,7 +2414,7 @@
    "url": "https://github.com/fuxi-ailabs/HMBot/releases/tag/vendor-v1",
    "published_at": "2026-10-02T06:50:05Z",
    "prerelease": true,
-   "kind": "inputs",
+   "kind": "构建输入",
    "packages": [],
    "source_commit": null,
    "a2h_version": null,

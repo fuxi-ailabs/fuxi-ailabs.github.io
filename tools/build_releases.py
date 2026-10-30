@@ -230,13 +230,27 @@ def build_entry(repo, rel, cache, overrides, with_artifacts):
     ov = overrides.get(tag, {})
     return {
         "tag": tag, "name": rel.get("name") or tag, "url": rel["url"], "published_at": rel.get("publishedAt"),
-        "prerelease": rel.get("isPrerelease"), "kind": "product" if packages else "inputs",
+        "prerelease": rel.get("isPrerelease"), "kind": classify(tag, packages)[0],
         "packages": [{"name": p["name"], "bytes": p["size"]} for p in packages],
         "source_commit": commit, "a2h_version": a2h, "business_comparisons": business,
         "runs": runs, "prs": [{"repo": r, "number": int(n), "url": f"https://github.com/{r}/pull/{n}"} for r, n in prs],
         "attached_reports": attached, "matrix": matrix,
         "extra_reports": ov.get("reports", []), "notes": ov.get("notes"),
     }
+
+
+def classify(tag, packages):
+    """Release kind from the tag itself, not from GitHub's pre-release checkbox (every HMBot release has it ticked).
+    vX.Y.Z → 正式版; vX.Y.Z-rc.N / -beta / -alpha → 候选版; candidate-* → 预览版; anything without product archives → 构建输入."""
+    if not packages:
+        return "构建输入", "dim"
+    if re.fullmatch(r"v\d+\.\d+\.\d+", tag):
+        return "正式版", "ok"
+    if re.fullmatch(r"v\d+\.\d+\.\d+-(rc|beta|alpha)[.\-]?\d*", tag):
+        return "候选版", "warn"
+    if tag.startswith("candidate-"):
+        return "预览版", "warn"
+    return "其他", "dim"
 
 
 # ── rendering ─────────────────────────────────────────────────────────────────
@@ -311,9 +325,8 @@ def render(entries, repo, evals):
     for e in entries:
         day = (e.get("published_at") or "")[:10]
         tag = e["tag"]
-        kind = chip("pre-release", "warn") if e.get("prerelease") else chip("release", "ok")
-        if e["kind"] == "inputs":
-            kind += chip("build inputs", "dim")
+        label, css = classify(tag, e.get("packages"))
+        kind = f'<span class="chip {css}" title="GitHub release flag: {"pre-release" if e.get("prerelease") else "release"}">{label}</span>'
         head = (f"<h2><a href=\"{html.escape(e['url'])}\">{html.escape(tag)}</a> <span class=dim>{html.escape(e['name'])}</span></h2>"
                 f"<div class=meta>{day} {kind}"
                 + (f" · source <a href=\"https://github.com/{repo}/commit/{e['source_commit']}\"><code>{e['source_commit'][:10]}</code></a>" if e.get("source_commit") else "")
