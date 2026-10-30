@@ -20,7 +20,7 @@
     "url": "https://migration-artifacts.obs.cn-east-3.myhuaweicloud.com/jetsnack/full-session-20261030T013210Z/jetsnack-complete-session-20261030T013210Z.zip"
    }
   ],
-  "note": "完整会话已归档;功能完备度 / 可用性 / 准确率 / 代码完备度尚未评测",
+  "note": "完整会话已归档;功能清单来自 spec,逐条尚未上机评测",
   "active_seconds": 206719,
   "tokens_breakdown": {
    "input": 12080797,
@@ -31,6 +31,51 @@
    "api_calls": 4293
   },
   "hmbot_version": "1.8.0-rc.1",
-  "run_id": "47f8c2ff-b1d4-4777-8448-c9f85a84f71f"
+  "run_id": "47f8c2ff-b1d4-4777-8448-c9f85a84f71f",
+  "checklist": [
+   {
+    "id": "F001",
+    "feature": "零食目录浏览（Feed 集合流 + DestinationBar + FilterBar）",
+    "result": "untested",
+    "note": ""
+   },
+   {
+    "id": "F002",
+    "feature": "零食详情查看（折叠头图/标签/相关推荐/数量步进/加购 stub）",
+    "result": "untested",
+    "note": ""
+   },
+   {
+    "id": "F003",
+    "feature": "实时搜索（四态状态机 + 200ms 延迟逐字搜索）",
+    "result": "untested",
+    "note": ""
+   },
+   {
+    "id": "F004",
+    "feature": "购物车管理（增删改量 + 1/5 随机失败演示 + 合计数学 + checkout stub）",
+    "result": "untested",
+    "note": ""
+   },
+   {
+    "id": "F005",
+    "feature": "筛选面板（FilterScreen 弹层 + FilterBar chips；选择不影响列表的占位行为如实记录）",
+    "result": "untested",
+    "note": ""
+   },
+   {
+    "id": "F006",
+    "feature": "桌面小组件 RecentOrdersWidget（Glance → ArkUI 卡片）",
+    "result": "untested",
+    "note": ""
+   },
+   {
+    "id": "F007",
+    "feature": "应用壳与导航（底部栏宽度动画/Tab 状态保持/deep link/Snackbar host/predictive back）",
+    "result": "untested",
+    "note": ""
+   }
+  ],
+  "checklist_source": "a2h-spec feature-index.md(spec 阶段从安卓源码推导,7 个 feature)"
  }
 ]

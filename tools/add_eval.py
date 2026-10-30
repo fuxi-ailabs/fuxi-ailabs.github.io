@@ -10,6 +10,13 @@ A row = one app migrated with one HMBot release, scored on the six things the le
   tokens                   token       total tokens of the migration (input + cache read + cache write + output)
 
 Values are ratios in [0,1] (pass "26/31" or "0.84" or "84%"); anything not measured stays null and renders as 未评测.
+
+Each row can carry a feature checklist (功能清单): one line per feature with its verdict. Sources:
+  --checklist FILE    our JSON list [{id, feature, result, note}], an a2h-replay-bench functional-*.json (items id →
+                      {result, note}; feature names from --checklist-names FUNCTIONAL.md), or a markdown table
+                      whose first columns are | ID | 功能 | 结果 | 说明 |  (结果: 通过/部分/不通过/测不了/未评测 or pass/partial/fail/untestable/untested)
+  --feature-index FILE  an a2h-spec feature-index.md (## 功能清单 table: | ID | 功能 | ...) → every feature listed as 未评测
+When the checklist has verdicts and --functional-completeness is not given, functional_completeness = 通过 ÷ 全部 (测不了计失败).
 Sources that can fill fields automatically:
   --session-dir DIR   output dir of hmbot-session-archive (MANIFEST.json stats → duration, tokens, model/host, archive link)
   --gt-eval FILE      gt-eval Eval Result (yaml/json): executed_kits[].summary passed/total → functional_completeness
@@ -112,6 +119,62 @@ def from_functional(path, row):
     return row
 
 
+RESULT_MAP = {"通过": "pass", "pass": "pass", "passed": "pass", "present": "pass", "✓": "pass", "covered-correct": "pass",
+              "部分": "partial", "partial": "partial", "◐": "partial", "degraded": "partial", "covered-wrong": "partial",
+              "不通过": "fail", "fail": "fail", "failed": "fail", "missing": "fail", "✗": "fail", "absent": "fail",
+              "测不了": "untestable", "untestable": "untestable", "—": "untestable", "na": "untestable", "n/a": "untestable", "blocked": "untestable",
+              "未评测": "untested", "untested": "untested", "": "untested"}
+
+
+def norm_result(v):
+    return RESULT_MAP.get(str(v or "").strip().lower(), RESULT_MAP.get(str(v or "").strip(), "untested"))
+
+
+def md_table_rows(text):
+    """Yield cell lists for every markdown table row that is not a header/separator."""
+    for line in text.splitlines():
+        if not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not cells or set(cells[0]) <= set("-: ") or cells[0].lower() == "id":
+            continue
+        yield cells
+
+
+def load_checklist(path, names_path=None):
+    p = Path(path).expanduser()
+    text = p.read_text()
+    items = []
+    if p.suffix == ".json":
+        data = json.loads(text)
+        if isinstance(data, list):
+            items = [{"id": i.get("id"), "feature": i.get("feature") or i.get("name") or "", "result": norm_result(i.get("result")),
+                      "note": i.get("note") or ""} for i in data]
+        elif isinstance(data, dict) and isinstance(data.get("items"), dict):      # a2h-replay-bench functional-*.json
+            names = {}
+            if names_path:
+                for cells in md_table_rows(Path(names_path).expanduser().read_text()):
+                    if len(cells) >= 2:
+                        names[cells[0]] = cells[1]
+            for k, v in data["items"].items():
+                items.append({"id": k, "feature": names.get(k, ""), "result": norm_result(v.get("result")), "note": v.get("note") or ""})
+        else:
+            sys.exit(f"unrecognised checklist JSON in {p}")
+    else:
+        for cells in md_table_rows(text):
+            if len(cells) >= 2:
+                items.append({"id": cells[0].strip("*` "), "feature": cells[1], "result": norm_result(cells[2] if len(cells) > 2 else ""),
+                              "note": cells[3] if len(cells) > 3 else ""})
+    return items
+
+
+def load_feature_index(path):
+    text = Path(path).expanduser().read_text()
+    sec = text.split("## 功能清单", 1)[1] if "## 功能清单" in text else text
+    sec = sec.split("\n## ", 1)[0]
+    return [{"id": c[0].strip("*` "), "feature": c[1], "result": "untested", "note": ""} for c in md_table_rows(sec) if len(c) >= 2]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--site", default=str(Path(__file__).resolve().parent.parent))
@@ -121,6 +184,10 @@ def main():
     ap.add_argument("--project", help="with --session-dir: project dir, to recompute time/tokens when the archive has no stats")
     ap.add_argument("--gt-eval")
     ap.add_argument("--functional")
+    ap.add_argument("--checklist", help="feature checklist with verdicts (JSON / bench functional json / markdown table)")
+    ap.add_argument("--checklist-names", help="FUNCTIONAL.md giving feature text for a bench functional json")
+    ap.add_argument("--feature-index", help="a2h-spec feature-index.md: list its features as 未评测")
+    ap.add_argument("--checklist-source", help="where the checklist comes from (shown on the page)")
     ap.add_argument("--functional-completeness")
     ap.add_argument("--usability")
     ap.add_argument("--accuracy")
@@ -153,6 +220,17 @@ def main():
         from_gt_eval(a.gt_eval, row)
     if a.functional:
         from_functional(a.functional, row)
+    if a.feature_index:
+        row["checklist"] = load_feature_index(a.feature_index)
+        row["checklist_source"] = a.checklist_source or f"a2h-spec feature-index ({Path(a.feature_index).expanduser().name})"
+    if a.checklist:
+        row["checklist"] = load_checklist(a.checklist, a.checklist_names)
+        row["checklist_source"] = a.checklist_source or Path(a.checklist).expanduser().name
+    cl = row.get("checklist") or []
+    if cl and any(i["result"] != "untested" for i in cl) and a.functional_completeness is None:
+        scored = [i for i in cl if i["result"] != "untested"]
+        row["functional_completeness"] = sum(1 for i in scored if i["result"] == "pass") / len(scored)
+        row["functional_basis"] = f"功能清单 {sum(1 for i in scored if i['result'] == 'pass')}/{len(scored)} 通过(测不了计失败)"
     for k, v in (("functional_completeness", a.functional_completeness), ("usability", a.usability),
                  ("accuracy", a.accuracy), ("code_completeness", a.code_completeness)):
         if v is not None:
@@ -167,6 +245,8 @@ def main():
     rows.append(row)
     rows.sort(key=lambda r: (r["tag"], r["app"]))
     f.write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n")
+    if cl:
+        print(f"checklist: {len(cl)} items from {row.get('checklist_source')}")
     print(f"recorded {a.tag} {a.app}: " + ", ".join(f"{k}={row[k]}" for k in ("functional_completeness", "usability", "accuracy", "code_completeness", "duration_seconds", "tokens")))
     print("now rebuild: python3 tools/build_releases.py && git add releases && git commit -m 'evals: ...' && git push")
 
