@@ -228,6 +228,17 @@ def checklist_block(r, out_dir):
         return "<span class=dim>未上传</span>"
     return f'<a href="{html.escape(link[0])}">{html.escape(link[1])}</a>'
 
+def method_block(r):
+    """The 评估方法 cell: link to an uploaded file / URL, or short text."""
+    if r.get("method_file"):
+        return f'<a href="{html.escape(r["method_file"])}">查看方法</a>'
+    if r.get("method_url"):
+        return f'<a href="{html.escape(r["method_url"])}">查看方法</a>'
+    if r.get("method_text"):
+        return html.escape(r["method_text"])
+    return "<span class=dim>未上传</span>"
+
+
 def evals_table(rows, out_dir):
     if not rows:
         return "<p class=na>这个版本还没有迁移评测记录。</p>"
@@ -244,9 +255,9 @@ def evals_table(rows, out_dir):
                    f"<td title=\"active {fmt_dur(r.get('active_seconds'))}\">{fmt_dur(r.get('duration_seconds'))}</td>"
                    f"<td title=\"{html.escape(tok_tip)}\">{fmt_tok(r.get('tokens'))}</td>"
                    f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td>"
-                   f"<td class=clcell>{checklist_block(r, out_dir)}</td></tr>")
+                   f"<td class=clcell>{checklist_block(r, out_dir)}</td><td class=method>{method_block(r)}</td></tr>")
     return ("<table class=evals><thead><tr><th>App</th><th>功能完备度</th><th>可用性</th><th>准确率</th><th>代码完备度</th>"
-            "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
+            "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th><th>评估方法</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
 
 
 def render(entries, repo, evals, out_dir):
@@ -272,7 +283,7 @@ def render(entries, repo, evals, out_dir):
 <p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
 <b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
 <b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
-未测的格子显示"未评测"。<b>功能清单</b>一列是人工上传的清单:链接或表格。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
+未测的格子显示"未评测"。<b>功能清单</b>和<b>评估方法</b>两列是人工上传的:链接、文件或一句话。卡片顶部是该版本可直接安装的产品包(三种宿主 × 两个平台)。指向私有仓的链接(安装包、sha256 等)需要登录的组织成员。</p>
 {''.join(cards)}
 <footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>)</footer>
 </main></body></html>

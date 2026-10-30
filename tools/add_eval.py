@@ -18,6 +18,8 @@ Each row's 功能清单 column is something a person uploads: a link, or a table
                         markdown table | ID | 功能 | 结果 | 说明 |  (结果: 通过/部分/不通过/测不了/未评测 or pass/partial/fail/untestable/untested),
                         JSON list [{id, feature, result, note}], a2h-replay-bench functional-*.json (names via --checklist-names FUNCTIONAL.md).
                         Other files (xlsx, pdf, html, ...) are uploaded and linked as-is.
+The 评估方法 column (right of 功能清单) is uploaded the same way:
+  --method URL|FILE|TEXT  a link, a file (copied to releases/methods/<tag>/<app>.<ext> and linked), or a short text shown in the cell.
 When a parsed checklist has verdicts and --functional-completeness is not given, functional_completeness = 通过 ÷ 已评测 (测不了计失败).
 Sources that can fill fields automatically:
   --session-dir DIR   output dir of hmbot-session-archive (MANIFEST.json stats → duration, tokens, model/host, archive link)
@@ -192,6 +194,7 @@ def main():
     ap.add_argument("--functional")
     ap.add_argument("--checklist", help="upload a checklist table file (markdown table / JSON / bench functional json / any file)")
     ap.add_argument("--checklist-url", help="link to a checklist kept elsewhere")
+    ap.add_argument("--method", help="评估方法: a URL, a file to upload, or a short text")
     ap.add_argument("--checklist-names", help="FUNCTIONAL.md giving feature text for a bench functional json")
     ap.add_argument("--checklist-source", help="who/where the checklist comes from (shown under the link)")
     ap.add_argument("--functional-completeness")
@@ -242,6 +245,19 @@ def main():
         except SystemExit:
             row.pop("checklist", None)      # not a table we can parse: linked as a plain file
         print(f"uploaded checklist file -> releases/{row['checklist_file']}")
+    if a.method:
+        if re.match(r"https?://", a.method):
+            row["method_url"] = a.method
+        elif Path(a.method).expanduser().is_file():
+            src = Path(a.method).expanduser()
+            dest_dir = SITE / "releases" / "methods" / a.tag
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            dest = dest_dir / (re.sub(r"[^\w.-]+", "_", a.app) + src.suffix.lower())
+            shutil.copyfile(src, dest)
+            row["method_file"] = str(dest.relative_to(SITE / "releases"))
+            print(f"uploaded method file -> releases/{row['method_file']}")
+        else:
+            row["method_text"] = a.method
     cl = row.get("checklist") or []
     if cl and any(i["result"] != "untested" for i in cl) and a.functional_completeness is None:
         scored = [i for i in cl if i["result"] != "untested"]

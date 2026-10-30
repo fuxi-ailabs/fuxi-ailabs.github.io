@@ -39,6 +39,8 @@ python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist-url https://..
 python3 tools/add_eval.py --tag v1.8.1 --app Jetsnack --checklist checklist.md --checklist-source "张三 2026-11-01 真机评测"
 ```
 
+评估方法一列(功能清单右边)同样人工上传:`--method https://...` 链接、`--method 方法.md` 文件(复制到 `releases/methods/<tag>/`)、或 `--method "真机逐项走查"` 一句话。
+
 结果列写 通过 / 部分 / 不通过 / 测不了 / 未评测。解析出的清单有结论而没传 `--functional-completeness` 时,功能完备度 = 通过数 ÷ 已评测数(测不了计失败)。
 
 页面里指向私有仓的链接(安装包、sha256)只有登录的组织成员能打开;页面本身是公开的,
