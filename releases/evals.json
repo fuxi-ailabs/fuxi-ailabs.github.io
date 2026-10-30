@@ -1,0 +1,36 @@
+[
+ {
+  "tag": "v1.8.0-rc.1",
+  "app": "Jetsnack",
+  "date": "2026-10-30",
+  "functional_completeness": null,
+  "usability": null,
+  "accuracy": null,
+  "code_completeness": null,
+  "duration_seconds": 68985,
+  "tokens": 406571611,
+  "model": "glm-5.3",
+  "hosts": [
+   "claude"
+  ],
+  "strategy": "standard",
+  "evidence": [
+   {
+    "title": "complete session archive (OBS, private)",
+    "url": "https://migration-artifacts.obs.cn-east-3.myhuaweicloud.com/jetsnack/full-session-20261030T013210Z/jetsnack-complete-session-20261030T013210Z.zip"
+   }
+  ],
+  "note": "完整会话已归档;功能完备度 / 可用性 / 准确率 / 代码完备度尚未评测",
+  "active_seconds": 206719,
+  "tokens_breakdown": {
+   "input": 12080797,
+   "cache_read": 390604738,
+   "cache_creation": 40602,
+   "output": 3845474,
+   "total": 406571611,
+   "api_calls": 4293
+  },
+  "hmbot_version": "1.8.0-rc.1",
+  "run_id": "47f8c2ff-b1d4-4777-8448-c9f85a84f71f"
+ }
+]

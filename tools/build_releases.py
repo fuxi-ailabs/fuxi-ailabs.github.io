@@ -269,7 +269,44 @@ def matrix_table(matrix, repo):
             "<th>Official upgrade</th><th>Size</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>")
 
 
-def render(entries, repo):
+def pct(v):
+    return "<span class=na>未评测</span>" if v is None else f"{v * 100:.0f}%"
+
+
+def fmt_dur(sec):
+    if sec is None:
+        return "<span class=na>–</span>"
+    h, m = divmod(int(sec) // 60, 60)
+    return f"{h}h{m:02d}m" if h else f"{m}m"
+
+
+def fmt_tok(n):
+    if n is None:
+        return "<span class=na>–</span>"
+    return f"{n / 1e6:.1f}M" if n >= 1e6 else f"{n / 1e3:.0f}k"
+
+
+def evals_table(rows):
+    if not rows:
+        return "<p class=na>这个版本还没有迁移评测记录。</p>"
+    out = []
+    for r in sorted(rows, key=lambda r: r["app"].lower()):
+        who = " · ".join(x for x in [r.get("model"), ", ".join(r.get("hosts") or []), r.get("strategy")] if x)
+        ev = " ".join(f'<a href="{html.escape(e["url"])}" title="{html.escape(e.get("title", ""))}">{html.escape(e.get("title") or "link")}</a>' for e in r.get("evidence") or [])
+        tip = r.get("functional_basis") or ""
+        tok = r.get("tokens_breakdown") or {}
+        tok_tip = (f"input {tok.get('input', 0):,} · cache read {tok.get('cache_read', 0):,} · cache write {tok.get('cache_creation', 0):,} · output {tok.get('output', 0):,}") if tok else ""
+        out.append(f"<tr><td class=app>{html.escape(r['app'])}<div class=sub>{html.escape(who)}</div></td>"
+                   f"<td title=\"{html.escape(tip)}\">{pct(r.get('functional_completeness'))}</td><td>{pct(r.get('usability'))}</td>"
+                   f"<td>{pct(r.get('accuracy'))}</td><td>{pct(r.get('code_completeness'))}</td>"
+                   f"<td title=\"active {fmt_dur(r.get('active_seconds'))}\">{fmt_dur(r.get('duration_seconds'))}</td>"
+                   f"<td title=\"{html.escape(tok_tip)}\">{fmt_tok(r.get('tokens'))}</td>"
+                   f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td></tr>")
+    return ("<table class=evals><thead><tr><th>App</th><th>功能完备度</th><th>可用性</th><th>准确率</th><th>代码完备度</th>"
+            "<th>时间</th><th>token</th><th>证据</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
+
+
+def render(entries, repo, evals):
     cards = []
     for e in entries:
         day = (e.get("published_at") or "")[:10]
@@ -303,9 +340,11 @@ def render(entries, repo):
         for a in e.get("extra_reports", []):
             reports.append(f'<li><a href="{html.escape(a["url"])}">{html.escape(a["title"])}</a>' + (f' <span class=dim>{html.escape(a.get("note", ""))}</span>' if a.get("note") else "") + "</li>")
         notes = f"<p class=notes>{html.escape(e['notes'])}</p>" if e.get("notes") else ""
-        body = (f"<div class=chips>{''.join(chips)}</div>" if chips else "") + matrix_table(e.get("matrix"), repo) + notes
-        body += (f"<details><summary>Test reports ({len(reports)})</summary><ul>{''.join(reports)}</ul></details>" if reports
-                 else "<p class=dim>No test report attached to this release.</p>")
+        body = evals_table(evals.get(tag, []))
+        build = (f"<div class=chips>{''.join(chips)}</div>" if chips else "") + matrix_table(e.get("matrix"), repo) + notes
+        build += (f"<ul>{''.join(reports)}</ul>" if reports else "<p class=dim>No build report attached to this release.</p>")
+        n_runs = len(e.get("runs", []))
+        body += (f"<details><summary>构建验收 · {n_runs} acceptance run(s), {len(reports)} report file(s)</summary>{build}</details>")
         cards.append(f"<section class=card id=\"{html.escape(tag)}\">{head}{body}</section>")
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
@@ -324,14 +363,18 @@ main{{max-width:1000px;margin:0 auto}} h1{{font-size:22px;margin:0 0 6px}} .lead
 a{{color:var(--link)}} .dim{{color:var(--dim);font-weight:400;font-size:13px}}
 table.matrix{{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px}} .matrix th,.matrix td{{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}} .matrix th{{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}}
 tr.bad td:first-child{{color:var(--badfg)}} details{{margin-top:8px}} summary{{cursor:pointer;color:var(--dim)}} details ul{{margin:6px 0 0;padding-left:18px}} li{{margin:2px 0}}
-.notes{{margin:8px 0 0;color:var(--dim)}} footer{{margin-top:24px;color:var(--dim);font-size:12px}}
+.notes{{margin:8px 0 0;color:var(--dim)}}
+table.evals{{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:13px}} .evals th,.evals td{{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}}
+.evals th{{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}} .evals td.app{{font-weight:600}} .sub{{font-weight:400;color:var(--dim);font-size:12px}} .na{{color:var(--dim)}} td.ev{{font-size:12px;max-width:260px}}
+footer{{margin-top:24px;color:var(--dim);font-size:12px}}
 </style></head><body><main>
 <h1>HMBot release test reports</h1>
-<p class=lead>One card per <a href="https://github.com/{repo}/releases">{repo} release</a>: the acceptance Actions runs it was promoted from, the per-product verification
-results (variant verification, smoke tests, archive audit, official-1.7.0 upgrade checks) read from those runs' verification artifacts or the release-attached
-reports, and every report file we know of. Links into the private repository need a signed-in member.</p>
+<p class=lead>每个 <a href="https://github.com/{repo}/releases">{repo} release</a> 一张卡:用这个版本迁移过的 App 各一行,记录
+<b>功能完备度</b>(功能在鸿蒙上可达的比例)、<b>可用性</b>(按普通用户正常使用可用的比例)、<b>准确率</b>(行为 / 业务对比与安卓一致的比例)、
+<b>代码完备度</b>(源码单元有迁移对应物、无桩的比例)、<b>时间</b>(迁移首末记录的墙钟)、<b>token</b>(全部 API 调用之和)。
+未测的格子显示"未评测"。发布流水线自己的构建验收(verification / smoke / 审计 / 升级)折叠在每张卡底部。指向私有仓的链接需要登录的组织成员。</p>
 {''.join(cards)}
-<footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · hand-added links in <a href="overrides.json">overrides.json</a></footer>
+<footer>Updated {updated} by <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/build_releases.py">tools/build_releases.py</a> · data in <a href="releases.json">releases.json</a> · evaluations in <a href="evals.json">evals.json</a> (add with <a href="https://github.com/fuxi-ailabs/fuxi-ailabs.github.io/blob/main/tools/add_eval.py">tools/add_eval.py</a>) · hand-added links in <a href="overrides.json">overrides.json</a></footer>
 </main></body></html>
 """
 
@@ -364,7 +407,11 @@ def main():
     entries.sort(key=lambda e: e.get("published_at") or "", reverse=True)
     (out_dir / "releases.json").write_text(json.dumps({"repo": args.repo, "generated_utc": datetime.now(timezone.utc).isoformat(),
                                                        "releases": entries}, ensure_ascii=False, indent=1) + "\n")
-    (out_dir / "index.html").write_text(render(entries, args.repo))
+    ev_file = out_dir / "evals.json"
+    evals = {}
+    for r in (json.loads(ev_file.read_text()) if ev_file.is_file() else []):
+        evals.setdefault(r["tag"], []).append(r)
+    (out_dir / "index.html").write_text(render(entries, args.repo, evals))
     log(f"wrote {out_dir / 'releases.json'} and index.html ({len(entries)} releases)")
 
 
