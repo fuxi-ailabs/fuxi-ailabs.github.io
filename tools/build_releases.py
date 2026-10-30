@@ -155,12 +155,17 @@ def packages_block(e, plus=None):
         host = HOST_LABEL.get(m.group(1), f"hmigbot-plus {plus['tag']}" if plus else "hmigbot-plus")
         grid.setdefault(host, {})[PLATFORM_KEY[m.group(2)]] = p
     rows = []
-    for host in [h for h in list(HOST_LABEL.values()) + [k for k in grid if k.startswith("hmigbot-plus")] if h in grid]:
+    plus_host = f"hmigbot-plus {plus['tag']}" if plus else "hmigbot-plus"
+    grid.setdefault(plus_host, {})          # the toolkit row is always there, even when the release has no archives yet
+    for host in [h for h in list(HOST_LABEL.values()) + [plus_host] if h in grid]:
         cells = []
         for plat in ("mac", "win"):
             p = grid[host].get(plat)
             if not p:
-                cells.append("<td class=dim>—</td>")
+                if host == plus_host:
+                    cells.append(f'<td class=dim>{"该 release 尚无产物" if plus else "没有同 major.minor 的工具包发版"}</td>')
+                else:
+                    cells.append("<td class=dim>—</td>")
                 continue
             sha = f' <a class=dim href="{html.escape(p["sha256_url"])}">sha256</a>' if p.get("sha256_url") else ""
             cells.append(f'<td><a href="{html.escape(p["url"])}">{html.escape(p["name"])}</a> <span class=dim>{fmt_bytes(p["bytes"])}</span>{sha}</td>')
