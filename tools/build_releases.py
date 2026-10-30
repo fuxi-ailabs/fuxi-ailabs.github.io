@@ -110,7 +110,7 @@ tr.bad td:first-child{color:var(--badfg)} details{margin-top:8px} summary{cursor
 .notes{margin:8px 0 0;color:var(--dim)}
 table.evals{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:13px} .evals th,.evals td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .evals th{color:var(--dim);font-weight:600;font-size:11px;letter-spacing:.04em}
-td.clcell{min-width:220px} details.cl summary{cursor:pointer;white-space:nowrap} details.cl[open] summary{color:var(--dim);font-size:12px}
+td.clcell,td.method{white-space:nowrap} td.sid code{font-size:11px;word-break:break-all} details.cl summary{cursor:pointer;white-space:nowrap} details.cl[open] summary{color:var(--dim);font-size:12px}
 table.checklist{border-collapse:collapse;width:100%;min-width:420px;margin:4px 0 0;font-size:12.5px} .checklist th,.checklist td{text-align:left;padding:4px 8px;border-top:1px solid var(--line);vertical-align:top}
 .checklist th{color:var(--dim);font-weight:600;font-size:11px} td.cid{white-space:nowrap;color:var(--dim)} td.res{white-space:nowrap} td.res.ok{color:var(--okfg)} td.res.bad{color:var(--badfg)} td.res.warn{color:var(--warnfg)} td.res.dim{color:var(--dim)} td.note{color:var(--dim)} .evals td.app{font-weight:600} .sub{font-weight:400;color:var(--dim);font-size:12px} .na{color:var(--dim)} td.ev{font-size:12px;max-width:260px}
 footer{margin-top:24px;color:var(--dim);font-size:12px}
@@ -255,9 +255,10 @@ def evals_table(rows, out_dir):
                    f"<td title=\"active {fmt_dur(r.get('active_seconds'))}\">{fmt_dur(r.get('duration_seconds'))}</td>"
                    f"<td title=\"{html.escape(tok_tip)}\">{fmt_tok(r.get('tokens'))}</td>"
                    f"<td class=ev>{ev}{('<div class=sub>' + html.escape(r['note']) + '</div>') if r.get('note') else ''}</td>"
-                   f"<td class=clcell>{checklist_block(r, out_dir)}</td><td class=method>{method_block(r)}</td></tr>")
+                   f"<td class=clcell>{checklist_block(r, out_dir)}</td><td class=method>{method_block(r)}</td>"
+                   f"<td class=sid title=\"run_id {html.escape(r.get('run_id') or '')}\">{('<code>' + html.escape(r['migbot_session_id']) + '</code>') if r.get('migbot_session_id') else '<span class=dim>—</span>'}</td></tr>")
     return ("<table class=evals><thead><tr><th>App</th><th>功能完备度</th><th>可用性</th><th>准确率</th><th>代码完备度</th>"
-            "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th><th>评估方法</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
+            "<th>时间</th><th>token</th><th>证据</th><th>功能清单</th><th>评估方法</th><th>migbot_session_id</th></tr></thead><tbody>" + "".join(out) + "</tbody></table>")
 
 
 def render(entries, repo, evals, out_dir):

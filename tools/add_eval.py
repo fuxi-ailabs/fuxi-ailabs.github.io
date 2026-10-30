@@ -81,6 +81,7 @@ def from_session_dir(d, row, project=None):
     row["hosts"] = sorted({s["host"] for s in man.get("sessions", [])}) or row.get("hosts")
     row["hmbot_version"] = man.get("hmbot_version")
     row["run_id"] = man.get("run_id")
+    row["migbot_session_id"] = man.get("migbot_session_id")
     if (d / "ARCHIVE.json").is_file():
         arc = json.loads((d / "ARCHIVE.json").read_text())
         z = next((o for o in arc["objects"] if o["object"].endswith(".zip")), None)
@@ -195,6 +196,7 @@ def main():
     ap.add_argument("--checklist", help="upload a checklist table file (markdown table / JSON / bench functional json / any file)")
     ap.add_argument("--checklist-url", help="link to a checklist kept elsewhere")
     ap.add_argument("--method", help="评估方法: a URL, a file to upload, or a short text")
+    ap.add_argument("--migbot-session-id", help="override / supply .migbot config.json migbot_session_id (normally read from the archive MANIFEST)")
     ap.add_argument("--checklist-names", help="FUNCTIONAL.md giving feature text for a bench functional json")
     ap.add_argument("--checklist-source", help="who/where the checklist comes from (shown under the link)")
     ap.add_argument("--functional-completeness")
@@ -245,6 +247,8 @@ def main():
         except SystemExit:
             row.pop("checklist", None)      # not a table we can parse: linked as a plain file
         print(f"uploaded checklist file -> releases/{row['checklist_file']}")
+    if a.migbot_session_id:
+        row["migbot_session_id"] = a.migbot_session_id
     if a.method:
         if re.match(r"https?://", a.method):
             row["method_url"] = a.method
